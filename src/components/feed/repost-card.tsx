@@ -27,6 +27,11 @@ export function RepostCard({ repost }: { repost: Repost }) {
         reacted={repost.reacted}
         reposts={repost.reposts}
         repostHref={`/republier/${repost.regret.id}`}
+        regret={{
+          id: repost.regret.id,
+          text: repost.regret.text,
+          handle: repost.regret.author.handle,
+        }}
       />
     </article>
   );

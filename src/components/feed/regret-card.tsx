@@ -13,6 +13,7 @@ export function RegretCard({ regret }: { regret: Regret }) {
         reacted={regret.reacted}
         reposts={regret.reposts}
         repostHref={`/republier/${regret.id}`}
+        regret={{ id: regret.id, text: regret.text, handle: regret.author.handle }}
       />
     </article>
   );

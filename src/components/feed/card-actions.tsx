@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 
 import { ReactionBar } from "@/components/feed/reaction-bar";
+import { ShareButton } from "@/components/feed/share-button";
 import type { ReactionId } from "@/types";
 
 /**
@@ -14,16 +15,20 @@ export function CardActions({
   reacted,
   reposts,
   repostHref,
+  regret,
 }: {
   itemId: string;
   counts: Record<ReactionId, number>;
   reacted?: ReactionId;
   reposts: number;
   repostHref: string;
+  regret: { id: string; text: string; handle: string };
 }) {
   return (
     <div className="absolute inset-x-0 bottom-0 h-[55px]">
       <ReactionBar itemId={itemId} counts={counts} reacted={reacted} />
+
+      <ShareButton regretId={regret.id} text={regret.text} handle={regret.handle} />
 
       <Link
         href={repostHref}
