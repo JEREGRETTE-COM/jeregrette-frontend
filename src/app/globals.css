@@ -10,6 +10,20 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --font-poppins: var(--font-poppins-sans), sans-serif;
+}
+
+/* Design tokens from the Figma file (JE REGRETTE). */
+@theme {
+  --color-surface: #161616;
+  --color-surface-border: #505050;
+  --color-field: #313131;
+  --color-field-alt: #2d2d2d;
+  --color-outline: #c5c5c5;
+  --color-muted: #979797;
+  --color-divider: #5a5a5a;
+  --color-legal: #595959;
+  --color-required: #ff2600;
 }
 
 @media (prefers-color-scheme: dark) {

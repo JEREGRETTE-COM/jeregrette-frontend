@@ -1,0 +1,76 @@
+"use client";
+
+import Link from "next/link";
+import { useActionState } from "react";
+
+import { signUpAction, type FormState } from "@/app/actions";
+import { AuthCard } from "@/components/auth/auth-card";
+import { AuthDivider } from "@/components/auth/auth-divider";
+import { AuthField } from "@/components/auth/auth-field";
+import { OAuthButtons } from "@/components/auth/oauth-buttons";
+import { Button } from "@/components/ui/button";
+
+export function SignupCard() {
+  const [state, formAction, pending] = useActionState<FormState, FormData>(
+    signUpAction,
+    {},
+  );
+
+  return (
+    <AuthCard title="Bienvenue sur" highlight="jeregrette.com">
+      <form action={formAction} className="flex flex-1 flex-col">
+        <OAuthButtons />
+        <AuthDivider />
+        <AuthField
+          id="email"
+          name="email"
+          type="email"
+          label="Adresse Email"
+          autoComplete="email"
+          className="mt-[21px]"
+        />
+        <AuthField
+          id="password"
+          name="password"
+          type="password"
+          label="Mot de passe"
+          autoComplete="new-password"
+          minLength={8}
+          className="mt-[11px]"
+        />
+
+        <p className="mt-[18px] text-[14px] font-light leading-none text-white">
+          Vous êtes déja regretteur(euse) ?{" "}
+          <Link href="/connexion" className="font-semibold underline">
+            Se connecter
+          </Link>
+        </p>
+
+        {state.error ? (
+          <p className="text-required mt-[12px] text-[14px] leading-none">{state.error}</p>
+        ) : null}
+
+        <p className="text-legal mx-auto mt-auto max-w-[343px] text-center text-[14px] leading-[15px]">
+          En continuant, tu acceptes notre
+          <br />
+          <Link href="/contrat-utilisation" className="font-semibold text-white underline">
+            Contrat d&rsquo;utilisation
+          </Link>{" "}
+          et reconnais que tu comprends notre{" "}
+          <Link href="/confidentialite" className="font-semibold text-white underline">
+            Politique de confidentialité
+          </Link>
+          .
+        </p>
+
+        <Button
+          type="submit"
+          disabled={pending}
+          className="mb-[33px] mt-[29px] h-[50px] w-full rounded-[25px] bg-white text-[15px] font-semibold text-black hover:bg-white/90"
+        >
+          {pending ? "…" : "Continuer"}
+        </Button>
+      </form>
+    </AuthCard>
+  );
+}

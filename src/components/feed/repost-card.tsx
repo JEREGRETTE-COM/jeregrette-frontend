@@ -1,0 +1,33 @@
+import { AuthorRow } from "@/components/feed/author-row";
+import { CardActions } from "@/components/feed/card-actions";
+import { RegretSurface } from "@/components/feed/regret-surface";
+import type { Repost } from "@/types";
+
+/** Figma 85:900 — the reposter's comment above the quoted regret. */
+export function RepostCard({ repost }: { repost: Repost }) {
+  return (
+    <article className="bg-surface relative h-[400px] w-full overflow-hidden rounded-[25px]">
+      <AuthorRow author={repost.author} time={repost.time} />
+
+      <div className="absolute inset-x-0 top-[55px] h-[291px]">
+        <p className="absolute left-[18px] top-[11px] max-w-[calc(100%-36px)] text-[15px] text-white">
+          {repost.comment}
+        </p>
+        <RegretSurface
+          regret={repost.regret}
+          authorOffset={14}
+          textClassName="w-[226px]"
+          className="border-surface-border absolute left-1/2 top-[43px] h-[245px] w-[565px] max-w-[calc(100%-34px)] -translate-x-1/2 rounded-[15px] border-2"
+        />
+      </div>
+
+      <CardActions
+        itemId={repost.id}
+        counts={repost.counts}
+        reacted={repost.reacted}
+        reposts={repost.reposts}
+        repostHref={`/republier/${repost.regret.id}`}
+      />
+    </article>
+  );
+}
