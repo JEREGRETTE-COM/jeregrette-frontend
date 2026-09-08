@@ -10,14 +10,14 @@ export function RepostCard({ repost }: { repost: Repost }) {
       <AuthorRow author={repost.author} time={repost.time} />
 
       <div className="absolute inset-x-0 top-[55px] h-[291px]">
-        <p className="absolute left-[18px] top-[11px] max-w-[calc(100%-36px)] text-[15px] text-white">
+        <p className="absolute left-[18px] top-[11px] max-w-[calc(100%-36px)] text-[14px] text-white sm:text-[15px]">
           {repost.comment}
         </p>
         <RegretSurface
           regret={repost.regret}
           authorOffset={14}
           textClassName="w-[226px]"
-          className="border-surface-border absolute left-1/2 top-[43px] h-[245px] w-[565px] max-w-[calc(100%-34px)] -translate-x-1/2 rounded-[15px] border-2"
+          className="border-surface-border absolute left-1/2 top-[43px] h-[245px] w-[calc(100%-34px)] max-w-[565px] -translate-x-1/2 rounded-[15px] border-2"
         />
       </div>
 

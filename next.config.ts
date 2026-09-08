@@ -7,7 +7,7 @@ const nextConfig: NextConfig = {
   // The share-image route reads these from disk; without this they are not
   // bundled into the serverless function and it fails with ENOENT in production.
   outputFileTracingIncludes: {
-    "/regret/[id]/image": ["./public/fonts/**", "./public/avatars/**"],
+    "/regret/[id]/image": ["./public/fonts/**"],
   },
 };
 

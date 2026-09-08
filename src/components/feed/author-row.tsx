@@ -1,6 +1,6 @@
 import Image from "next/image";
 
-import { cn } from "@/lib/utils";
+import { cn, initial } from "@/lib/utils";
 
 import type { Author } from "@/types";
 
@@ -18,14 +18,24 @@ export function AuthorRow({
 }) {
   return (
     <div className="absolute inset-x-0 top-0 h-[55px]">
-      <Image
-        src={author.avatar}
-        alt=""
-        width={35}
-        height={35}
-        className="absolute top-[10px] h-[35px] w-[35px] rounded-full object-cover"
-        style={{ left: offset }}
-      />
+      {author.avatar ? (
+        <Image
+          src={author.avatar}
+          alt=""
+          width={35}
+          height={35}
+          className="absolute top-[10px] h-[35px] w-[35px] rounded-full object-cover"
+          style={{ left: offset }}
+        />
+      ) : (
+        <div
+          aria-hidden
+          className="absolute top-[10px] flex h-[35px] w-[35px] items-center justify-center rounded-full bg-white/20 text-[15px] font-semibold text-white"
+          style={{ left: offset }}
+        >
+          {initial(author.handle)}
+        </div>
+      )}
       <p
         className={cn(
           "absolute text-[14px] font-medium leading-none text-white",

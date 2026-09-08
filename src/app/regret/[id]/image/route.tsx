@@ -6,6 +6,7 @@ import { ImageResponse } from "next/og";
 import { getAccessToken } from "@/lib/auth";
 import { toRegret } from "@/lib/feed-mapping";
 import { getPost } from "@/lib/posts";
+import { initial } from "@/lib/utils";
 
 /** Square, the format WhatsApp previews best. */
 const SIZE = 1080;
@@ -57,7 +58,7 @@ export async function GET(
     return new Response("Not found", { status: 404 });
   }
 
-  const avatar = avatarSource(regret.author.avatar);
+  const avatar = regret.author.avatar ? avatarSource(regret.author.avatar) : null;
 
   return new ImageResponse(
     (
@@ -133,9 +134,16 @@ export async function GET(
                 height: px(35),
                 borderRadius: px(35),
                 display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
                 backgroundColor: "rgba(255,255,255,0.2)",
+                fontSize: px(15),
+                fontWeight: 600,
+                color: "#ffffff",
               }}
-            />
+            >
+              {initial(regret.author.handle)}
+            </div>
           )}
           <div style={{ display: "flex", flexDirection: "column", marginLeft: px(12) }}>
             <span style={{ fontSize: px(14), fontWeight: 600, color: "#ffffff" }}>

@@ -26,7 +26,7 @@ export function RepostComposer({
   return (
     <form
       action={formAction}
-      className="bg-surface relative h-[705px] w-[520px] max-w-full overflow-hidden rounded-[25px]"
+      className="bg-surface relative flex min-h-[560px] w-full max-w-[520px] flex-col overflow-hidden rounded-[25px] sm:min-h-[705px]"
     >
       <input type="hidden" name="regretId" value={regret.id} />
 
@@ -46,7 +46,7 @@ export function RepostComposer({
         {pending ? "…" : "Republier"}
       </Button>
 
-      <div className="absolute inset-x-0 top-[60px] h-[55px]">
+      <div className="relative mt-[60px] h-[55px] shrink-0">
         <AuthorRow author={author} offset={25} />
       </div>
 
@@ -54,20 +54,20 @@ export function RepostComposer({
         name="comment"
         placeholder="Ajouter un commentaire"
         aria-label="Ajouter un commentaire"
-        className="bg-field-alt absolute left-1/2 top-[129px] h-[118px] w-[471px] max-w-[calc(100%-49px)] -translate-x-1/2 resize-none rounded-[15px] px-[18px] py-[12px] text-[15px] text-white outline-none placeholder:text-white/35"
+        className="bg-field-alt mx-auto mt-[14px] h-[118px] w-[calc(100%-48px)] max-w-[471px] shrink-0 resize-none rounded-[15px] px-[18px] py-[12px] text-[15px] text-white outline-none placeholder:text-white/35"
       />
 
       {state.error ? (
-        <p className="text-required absolute inset-x-0 top-[253px] text-center text-[14px]">
+        <p className="text-required shrink-0 px-6 pt-[10px] text-center text-[14px]">
           {state.error}
         </p>
       ) : null}
 
-      <div className="border-surface-border bg-surface absolute inset-x-0 bottom-0 h-[426px] border-t-2">
+      <div className="border-surface-border bg-surface mt-auto flex min-h-0 shrink-0 justify-center border-t-2 px-[23px] py-[28px]">
         <RegretSurface
           regret={regret}
           authorOffset={25}
-          className="border-surface-border absolute left-1/2 top-[28px] h-[369px] w-[474px] max-w-[calc(100%-46px)] -translate-x-1/2 rounded-[15px] border-2"
+          className="border-surface-border h-[369px] w-full max-w-[474px] rounded-[15px] border-2"
         />
       </div>
     </form>

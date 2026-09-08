@@ -30,7 +30,7 @@ export function RegretComposer() {
   return (
     <form
       action={formAction}
-      className="border-surface-border relative h-[705px] w-[520px] max-w-full overflow-hidden rounded-[25px] border-y-[3px]"
+      className="border-surface-border relative flex min-h-[560px] w-full max-w-[520px] flex-col overflow-hidden rounded-[25px] border-y-[3px] sm:min-h-[705px]"
       style={{ backgroundColor: palette[colour] }}
     >
       <input type="hidden" name="background" value={palette[colour]} />
@@ -52,7 +52,8 @@ export function RegretComposer() {
         <Image src="/icons/brush.svg" alt="" width={35} height={35} unoptimized />
       </button>
 
-      <div className="pointer-events-none absolute inset-0 flex items-center justify-center px-6">
+      {/* pt clears the absolutely placed close and brush buttons */}
+      <div className="flex min-h-0 flex-1 items-center justify-center px-6 pb-4 pt-[55px]">
         <textarea
           ref={textarea}
           name="regret"
@@ -62,12 +63,12 @@ export function RegretComposer() {
           onInput={autoGrow}
           placeholder="Qu’est ce que tu regrettes"
           aria-label="Qu’est ce que tu regrettes"
-          className="pointer-events-auto max-h-[400px] w-[331px] max-w-full resize-none overflow-y-auto bg-transparent text-center text-[24px] font-medium text-white outline-none placeholder:text-white/35"
+          className="max-h-full w-[331px] max-w-full resize-none overflow-y-auto bg-transparent text-center text-[24px] font-medium text-white outline-none placeholder:text-white/35"
         />
       </div>
 
       {state.error ? (
-        <p className="absolute inset-x-0 bottom-[101px] text-center text-[14px] text-white">
+        <p className="shrink-0 px-6 pb-[10px] text-center text-[14px] text-white">
           {state.error}
         </p>
       ) : null}
@@ -75,7 +76,7 @@ export function RegretComposer() {
       <Button
         type="submit"
         disabled={pending}
-        className="absolute bottom-[16px] left-1/2 h-[75px] w-[491px] max-w-[calc(100%-48px)] -translate-x-1/2 rounded-[15px] bg-white text-[15px] font-medium text-black hover:bg-white/90"
+        className="relative mx-auto mb-[16px] h-[75px] w-[calc(100%-48px)] max-w-[491px] shrink-0 rounded-[15px] bg-white text-[15px] font-medium text-black hover:bg-white/90"
       >
         {pending ? "Publication…" : "Publier mon regret"}
         <Image

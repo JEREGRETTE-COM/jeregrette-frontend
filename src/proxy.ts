@@ -53,6 +53,6 @@ export const config = {
      * Page navigations only. Static assets and the generated images never carry
      * a session, so renewing on them would be wasted work.
      */
-    "/((?!_next/static|_next/image|favicon.ico|icon.png|apple-icon.png|avatars/|icons/|brand/|fonts/).*)",
+    "/((?!_next/static|_next/image|favicon.ico|icon.png|apple-icon.png|icons/|brand/|fonts/).*)",
   ],
 };

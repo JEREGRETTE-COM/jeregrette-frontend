@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 /** The API answers 401 on /posts, so there is nothing to show signed out. */
 function SignedOut() {
   return (
-    <div className="mx-auto flex w-[599px] max-w-full flex-col items-center gap-6 px-4 py-24 text-center">
+    <div className="mx-auto flex w-full max-w-[599px] flex-col items-center gap-6 px-4 py-20 text-center">
       <p className="text-[20px] font-semibold text-white">
         Connecte-toi pour voir les regrets
       </p>
@@ -33,7 +33,7 @@ export default async function HomePage() {
 
   if (feed.length === 0) {
     return (
-      <div className="mx-auto w-[599px] max-w-full px-4 py-24 text-center">
+      <div className="mx-auto w-full max-w-[599px] px-4 py-20 text-center">
         <p className="text-muted text-[15px]">
           Aucun regret pour le moment. Sois le premier.
         </p>
@@ -42,7 +42,7 @@ export default async function HomePage() {
   }
 
   return (
-    <div className="mx-auto flex w-[599px] max-w-full flex-col gap-[10px] pb-[180px] pt-[10px]">
+    <div className="mx-auto flex w-full max-w-[599px] flex-col gap-[10px] px-3 pb-[140px] pt-[10px] sm:px-0 sm:pb-[180px]">
       {feed.map((item) =>
         item.kind === "regret" ? (
           <RegretCard key={item.regret.id} regret={item.regret} />

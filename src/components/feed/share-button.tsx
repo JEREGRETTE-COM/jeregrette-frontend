@@ -85,7 +85,7 @@ export function ShareButton({
       onPointerDown={prefetch}
       onFocus={prefetch}
       onClick={share}
-      className="bg-surface absolute right-[85px] top-[11px] flex h-[34px] w-[44px] items-center justify-center rounded-[20px] disabled:opacity-60"
+      className="bg-surface flex h-[34px] w-[38px] shrink-0 items-center justify-center rounded-[20px] disabled:opacity-60 sm:w-[44px]"
     >
       <Image
         src="/icons/share.svg"

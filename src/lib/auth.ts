@@ -12,24 +12,10 @@ export const REFRESH_COOKIE = "jr_refresh";
 const FALLBACK_ACCESS_MAX_AGE = 60 * 60;
 const REFRESH_MAX_AGE = 60 * 60 * 24 * 30;
 
-/** Design avatars, used while the backend has none for a user. */
-const placeholderAvatars = [
-  "/avatars/adjamela3.png",
-  "/avatars/grandpapa.png",
-  "/avatars/aquilafaute.png",
-  "/avatars/fucklesmogodeb.png",
-  "/avatars/terrifiedofwoman457.png",
-];
-
-function placeholderAvatar(seed: string) {
-  const sum = [...seed].reduce((total, char) => total + char.charCodeAt(0), 0);
-  return placeholderAvatars[sum % placeholderAvatars.length];
-}
-
 export function toAuthor(user: ApiUser): Author {
   return {
     handle: `@${user.username}`,
-    avatar: user.avatar_url || placeholderAvatar(user.username),
+    avatar: user.avatar_url || null,
   };
 }
 

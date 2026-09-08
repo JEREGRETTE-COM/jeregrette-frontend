@@ -10,7 +10,8 @@ export type ReactionId = ReactionType;
 
 export type Author = {
   handle: string;
-  avatar: string;
+  /** null when the backend has no picture — the UI falls back to an initial. */
+  avatar: string | null;
 };
 
 export type Regret = {

@@ -6,8 +6,8 @@ import { ShareButton } from "@/components/feed/share-button";
 import type { ReactionId } from "@/types";
 
 /**
- * Figma 85:875 — 55px bar: the reaction pill on the left, a 66x34 repost pill
- * on the right.
+ * Figma 85:875 — 55px bar: reactions on the left, share and repost on the
+ * right. Laid out as a flex row so it survives a 360px screen.
  */
 export function CardActions({
   itemId,
@@ -25,26 +25,31 @@ export function CardActions({
   regret: { id: string; text: string; handle: string };
 }) {
   return (
-    <div className="absolute inset-x-0 bottom-0 h-[55px]">
+    <div className="absolute inset-x-0 bottom-0 flex h-[55px] items-center gap-[8px] px-[12px] sm:px-[9px] sm:pl-[12px]">
       <ReactionBar itemId={itemId} counts={counts} reacted={reacted} />
 
-      <ShareButton regretId={regret.id} text={regret.text} handle={regret.handle} />
+      {/* ml-auto pins this group to the right edge once the pill stops growing */}
+      <div className="ml-auto flex shrink-0 items-center gap-[8px] sm:gap-[10px]">
+        <ShareButton regretId={regret.id} text={regret.text} handle={regret.handle} />
 
-      <Link
-        href={repostHref}
-        aria-label="Republier"
-        className="bg-surface absolute right-[9px] top-[11px] flex h-[34px] w-[66px] items-center rounded-[20px]"
-      >
-        <Image
-          src="/icons/repost.svg"
-          alt=""
-          width={20}
-          height={22}
-          unoptimized
-          className="ml-[11px] h-[21.5px] w-[19.5px]"
-        />
-        <span className="ml-[7px] text-[14px] leading-none text-[#afafaf]">{reposts}</span>
-      </Link>
+        <Link
+          href={repostHref}
+          aria-label="Republier"
+          className="bg-surface flex h-[34px] w-[54px] shrink-0 items-center justify-center gap-[5px] rounded-[20px] sm:w-[66px] sm:justify-start sm:gap-[7px] sm:pl-[11px]"
+        >
+          <Image
+            src="/icons/repost.svg"
+            alt=""
+            width={20}
+            height={22}
+            unoptimized
+            className="h-[21.5px] w-[19.5px]"
+          />
+          <span className="text-[12px] leading-none text-[#afafaf] sm:text-[14px]">
+            {reposts}
+          </span>
+        </Link>
+      </div>
     </div>
   );
 }

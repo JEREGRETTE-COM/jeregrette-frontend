@@ -5,9 +5,7 @@ import { useActionState } from "react";
 
 import { signUpAction, type FormState } from "@/app/actions";
 import { AuthCard } from "@/components/auth/auth-card";
-import { AuthDivider } from "@/components/auth/auth-divider";
 import { AuthField } from "@/components/auth/auth-field";
-import { OAuthButtons } from "@/components/auth/oauth-buttons";
 import { Button } from "@/components/ui/button";
 
 export function SignupCard() {
@@ -19,8 +17,6 @@ export function SignupCard() {
   return (
     <AuthCard title="Bienvenue sur" highlight="jeregrette.com">
       <form action={formAction} className="flex flex-1 flex-col">
-        <OAuthButtons />
-        <AuthDivider />
         <AuthField
           id="username"
           name="username"

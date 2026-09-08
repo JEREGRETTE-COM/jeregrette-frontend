@@ -5,9 +5,7 @@ import { useActionState } from "react";
 
 import { signInAction, type FormState } from "@/app/actions";
 import { AuthCard } from "@/components/auth/auth-card";
-import { AuthDivider } from "@/components/auth/auth-divider";
 import { AuthField } from "@/components/auth/auth-field";
-import { OAuthButtons } from "@/components/auth/oauth-buttons";
 import { Button } from "@/components/ui/button";
 
 export function LoginCard() {
@@ -19,8 +17,6 @@ export function LoginCard() {
   return (
     <AuthCard title="Connexion à" highlight="jeregrette.com">
       <form action={formAction} className="flex flex-1 flex-col">
-        <OAuthButtons />
-        <AuthDivider />
         <AuthField
           id="email"
           name="email"
@@ -49,7 +45,7 @@ export function LoginCard() {
           <p className="text-required mt-[12px] shrink-0 text-[14px] leading-none">{state.error}</p>
         ) : null}
 
-        <p className="mt-auto shrink-0 text-[14px] font-light leading-none text-white">
+        <p className="mt-[24px] shrink-0 text-[14px] font-light leading-none text-white sm:mt-auto">
           Pas encore regretteur(euse) ?{" "}
           <Link href="/inscription" className="font-semibold underline">
             Créer un compte

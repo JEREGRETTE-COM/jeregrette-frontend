@@ -7,7 +7,7 @@ import { applyReaction, reactions, type ReactionState } from "@/lib/reactions";
 import { cn } from "@/lib/utils";
 import type { ReactionId } from "@/types";
 
-/** Figma 85:876 — 190x34 pill holding the three reaction chips. */
+/** Figma 85:876 — the reaction pill. Fixed at 314px once there is room. */
 export function ReactionBar({
   itemId,
   counts,
@@ -26,7 +26,7 @@ export function ReactionBar({
         addOptimistic(String(formData.get("reaction")) as ReactionId);
         return toggleReactionAction(formData);
       }}
-      className="bg-surface absolute left-[12px] top-[11px] flex h-[34px] w-[314px] items-center rounded-[20px] p-[2px]"
+      className="bg-surface flex h-[34px] min-w-0 flex-1 items-center rounded-[20px] p-[2px] sm:w-[314px] sm:flex-none"
     >
       <input type="hidden" name="itemId" value={itemId} />
       <input type="hidden" name="current" value={state.reacted ?? ""} />
@@ -39,17 +39,17 @@ export function ReactionBar({
             name="reaction"
             value={reaction.id}
             aria-pressed={active}
-            className="flex h-[30px] w-[62px] items-center gap-[4px] rounded-[25px] border-[0.5px] border-transparent pl-[7px]"
+            className="flex h-[30px] min-w-0 flex-1 items-center justify-center gap-[3px] rounded-[25px] border-[0.5px] border-transparent px-1 sm:w-[62px] sm:flex-none sm:justify-start sm:gap-[4px] sm:pl-[7px]"
             style={
               active
                 ? { backgroundColor: reaction.color, borderColor: "#ffffff" }
                 : undefined
             }
           >
-            <span className="text-[20px] leading-none">{reaction.emoji}</span>
+            <span className="text-[17px] leading-none sm:text-[20px]">{reaction.emoji}</span>
             <span
               className={cn(
-                "text-[14px] leading-none",
+                "text-[12px] leading-none sm:text-[14px]",
                 active ? "font-semibold text-white" : "text-[#afafaf]",
               )}
             >
