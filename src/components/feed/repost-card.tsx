@@ -9,15 +9,22 @@ export function RepostCard({ repost }: { repost: Repost }) {
     <article className="bg-surface relative h-[400px] w-full overflow-hidden rounded-[25px]">
       <AuthorRow author={repost.author} time={repost.time} />
 
-      <div className="absolute inset-x-0 top-[55px] h-[291px]">
-        <p className="absolute left-[18px] top-[11px] max-w-[calc(100%-36px)] text-[14px] text-white sm:text-[15px]">
-          {repost.comment}
-        </p>
+      {/*
+        A flex column, not two absolute boxes: the comment is user text and runs
+        to two lines often enough that a fixed offset put the quoted post on top
+        of it. The quoted card takes whatever height is left.
+      */}
+      <div className="absolute inset-x-0 bottom-[55px] top-[55px] flex flex-col px-[17px] pb-[3px] pt-[11px]">
+        {repost.comment ? (
+          <p className="mb-[9px] line-clamp-2 shrink-0 text-[14px] leading-[1.35] text-white sm:text-[15px]">
+            {repost.comment}
+          </p>
+        ) : null}
         <RegretSurface
           regret={repost.regret}
           authorOffset={14}
-          textClassName="w-[226px]"
-          className="border-surface-border absolute left-1/2 top-[43px] h-[245px] w-[calc(100%-34px)] max-w-[565px] -translate-x-1/2 rounded-[15px] border-2"
+          textClassName="w-[226px] max-w-full"
+          className="border-surface-border min-h-0 w-full flex-1 rounded-[15px] border-2"
         />
       </div>
 

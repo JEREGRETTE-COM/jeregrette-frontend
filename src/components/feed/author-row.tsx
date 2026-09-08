@@ -38,10 +38,10 @@ export function AuthorRow({
       )}
       <p
         className={cn(
-          "absolute text-[14px] font-medium leading-none text-white",
+          "absolute truncate text-[14px] font-medium leading-none text-white",
           time ? "top-[11px]" : "top-[17px]",
         )}
-        style={{ left: offset + 47 }}
+        style={{ left: offset + 47, maxWidth: `calc(100% - ${offset + 59}px)` }}
       >
         {author.handle}
       </p>
