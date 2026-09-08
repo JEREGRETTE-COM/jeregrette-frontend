@@ -5,9 +5,11 @@ import type { Repost } from "@/types";
 
 /** Figma 85:900 — the reposter's comment above the quoted regret. */
 export function RepostCard({ repost }: { repost: Repost }) {
+  // The card background is the page background, so without an outline the
+  // comment reads as floating between two unrelated posts.
   return (
-    <article className="bg-surface relative h-[400px] w-full overflow-hidden rounded-[25px]">
-      <AuthorRow author={repost.author} time={repost.time} />
+    <article className="bg-surface border-field-alt relative h-[400px] w-full overflow-hidden rounded-[25px] border">
+      <AuthorRow author={repost.author} time={repost.time} note="a republié" />
 
       {/*
         A flex column, not two absolute boxes: the comment is user text and runs

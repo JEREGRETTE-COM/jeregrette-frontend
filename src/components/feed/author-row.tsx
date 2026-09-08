@@ -10,10 +10,13 @@ import type { Author } from "@/types";
 export function AuthorRow({
   author,
   time,
+  note,
   offset = 11,
 }: {
   author: Author;
   time?: string;
+  /** Shown after the handle, e.g. "a republié". */
+  note?: string;
   offset?: number;
 }) {
   return (
@@ -44,6 +47,7 @@ export function AuthorRow({
         style={{ left: offset + 47, maxWidth: `calc(100% - ${offset + 59}px)` }}
       >
         {author.handle}
+        {note ? <span className="font-normal text-[#afafaf]"> {note}</span> : null}
       </p>
       {time ? (
         <p
