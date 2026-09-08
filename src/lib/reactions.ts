@@ -1,9 +1,11 @@
 import type { ReactionId } from "@/types";
 
 export const reactions: { id: ReactionId; emoji: string; color: string }[] = [
-  { id: "skull", emoji: "💀", color: "#ff0000" },
-  { id: "laugh", emoji: "🤣", color: "#ff9500" },
-  { id: "cry", emoji: "😭", color: "#00aaff" },
+  { id: "EMPATHY", emoji: "💀", color: "#ff0000" },
+  { id: "LAUGH", emoji: "🤣", color: "#ff9500" },
+  { id: "SAD", emoji: "😭", color: "#00aaff" },
+  { id: "LIKE", emoji: "👍", color: "#34c759" },
+  { id: "SUPPORT", emoji: "💪", color: "#af52de" },
 ];
 
 export type ReactionState = {

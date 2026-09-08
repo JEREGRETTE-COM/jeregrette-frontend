@@ -3,7 +3,9 @@ import { join } from "node:path";
 
 import { ImageResponse } from "next/og";
 
-import { getRegret } from "@/lib/store";
+import { getAccessToken } from "@/lib/auth";
+import { toRegret } from "@/lib/feed-mapping";
+import { getPost } from "@/lib/posts";
 
 /** Square, the format WhatsApp previews best. */
 const SIZE = 1080;
@@ -23,9 +25,18 @@ const fonts = {
   black: readFileSync(asset("fonts", "poppins-900.ttf")),
 };
 
-function avatarDataUri(path: string) {
-  const bytes = readFileSync(asset(path.replace(/^\//, "")));
-  return `data:image/png;base64,${bytes.toString("base64")}`;
+/**
+ * Avatars are either a remote avatar_url from the API, which satori fetches on
+ * its own, or one of the bundled placeholders, which must be inlined.
+ */
+function avatarSource(avatar: string) {
+  if (/^https?:\/\//.test(avatar)) return avatar;
+  try {
+    const bytes = readFileSync(asset(avatar.replace(/^\//, "")));
+    return `data:image/png;base64,${bytes.toString("base64")}`;
+  } catch {
+    return null;
+  }
 }
 
 /** Satori has no `inset` shorthand — every layer states its own box. */
@@ -36,8 +47,17 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
-  const regret = getRegret(id);
-  if (!regret) return new Response("Not found", { status: 404 });
+  const token = await getAccessToken();
+  if (!token) return new Response("Unauthorized", { status: 401 });
+
+  let regret;
+  try {
+    regret = toRegret(await getPost(id, token));
+  } catch {
+    return new Response("Not found", { status: 404 });
+  }
+
+  const avatar = avatarSource(regret.author.avatar);
 
   return new ImageResponse(
     (
@@ -94,15 +114,29 @@ export async function GET(
             alignItems: "center",
           }}
         >
-          {/* satori renders plain elements — next/image does not apply here */}
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            alt=""
-            src={avatarDataUri(regret.author.avatar)}
-            width={px(35)}
-            height={px(35)}
-            style={{ borderRadius: px(35), objectFit: "cover" }}
-          />
+          {avatar ? (
+            <>
+              {/* satori renders plain elements — next/image does not apply here */}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                alt=""
+                src={avatar}
+                width={px(35)}
+                height={px(35)}
+                style={{ borderRadius: px(35), objectFit: "cover" }}
+              />
+            </>
+          ) : (
+            <div
+              style={{
+                width: px(35),
+                height: px(35),
+                borderRadius: px(35),
+                display: "flex",
+                backgroundColor: "rgba(255,255,255,0.2)",
+              }}
+            />
+          )}
           <div style={{ display: "flex", flexDirection: "column", marginLeft: px(12) }}>
             <span style={{ fontSize: px(14), fontWeight: 600, color: "#ffffff" }}>
               {regret.author.handle}

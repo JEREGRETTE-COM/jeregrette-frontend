@@ -15,7 +15,7 @@ export function AuthCard({
   children: React.ReactNode;
 }) {
   return (
-    <div className="border-surface-border bg-surface relative flex h-[705px] w-[520px] max-w-full flex-col overflow-hidden rounded-[25px] border-y-[3px] px-6">
+    <div className="border-surface-border bg-surface relative flex min-h-[705px] w-[520px] max-w-full flex-col overflow-hidden rounded-[25px] border-y-[3px] px-6">
       <Link
         href="/"
         aria-label="Fermer"

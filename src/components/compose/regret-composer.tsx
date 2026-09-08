@@ -58,6 +58,7 @@ export function RegretComposer() {
           name="regret"
           rows={1}
           required
+          maxLength={500}
           onInput={autoGrow}
           placeholder="Qu’est ce que tu regrettes"
           aria-label="Qu’est ce que tu regrettes"

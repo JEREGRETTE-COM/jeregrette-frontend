@@ -12,7 +12,7 @@ type AuthFieldProps = React.ComponentProps<"input"> & {
  */
 export function AuthField({ id, label, className, ...props }: AuthFieldProps) {
   return (
-    <div className={cn("relative h-[50px]", className)}>
+    <div className={cn("relative h-[50px] shrink-0", className)}>
       <input
         id={id}
         required

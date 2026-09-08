@@ -4,15 +4,31 @@ import { notFound } from "next/navigation";
 
 import { RegretSurface } from "@/components/feed/regret-surface";
 import { siteConfig } from "@/lib/config";
-import { getRegret } from "@/lib/store";
+import { getAccessToken } from "@/lib/auth";
+import { toRegret } from "@/lib/feed-mapping";
+import { getPost } from "@/lib/posts";
 
 export const dynamic = "force-dynamic";
+
+/**
+ * Reads with the viewer's own token: /posts/{id} is authenticated, so a signed
+ * out visitor — a link preview crawler included — gets nothing.
+ */
+async function loadRegret(id: string) {
+  const token = await getAccessToken();
+  if (!token) return null;
+  try {
+    return toRegret(await getPost(id, token));
+  } catch {
+    return null;
+  }
+}
 
 export async function generateMetadata({
   params,
 }: PageProps<"/regret/[id]">): Promise<Metadata> {
   const { id } = await params;
-  const regret = getRegret(id);
+  const regret = await loadRegret(id);
   if (!regret) return { title: "Regret introuvable" };
 
   const title = `${regret.author.handle} sur ${siteConfig.name}`;
@@ -34,7 +50,7 @@ export async function generateMetadata({
 
 export default async function RegretPage({ params }: PageProps<"/regret/[id]">) {
   const { id } = await params;
-  const regret = getRegret(id);
+  const regret = await loadRegret(id);
   if (!regret) notFound();
 
   return (

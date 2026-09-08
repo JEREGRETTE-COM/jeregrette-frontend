@@ -3,7 +3,10 @@ export type NavItem = {
   href: string;
 };
 
-export type ReactionId = "skull" | "laugh" | "cry";
+import type { ReactionType } from "@/types/api";
+
+/** The backend vocabulary is the vocabulary. */
+export type ReactionId = ReactionType;
 
 export type Author = {
   handle: string;

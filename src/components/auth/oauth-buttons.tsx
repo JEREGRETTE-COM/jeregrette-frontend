@@ -21,7 +21,7 @@ const providers = [
 
 export function OAuthButtons() {
   return (
-    <div className="mt-[10px] flex flex-col gap-[11px]">
+    <div className="mt-[10px] flex shrink-0 flex-col gap-[11px]">
       {providers.map((provider) => (
         <Button
           key={provider.id}

@@ -40,16 +40,16 @@ export function LoginCard() {
 
         <Link
           href="/mot-de-passe-oublie"
-          className="text-muted mt-[18px] self-start text-[14px] font-light leading-none underline"
+          className="text-muted mt-[18px] shrink-0 self-start text-[14px] font-light leading-none underline"
         >
           Mot de passe oublié ?
         </Link>
 
         {state.error ? (
-          <p className="text-required mt-[12px] text-[14px] leading-none">{state.error}</p>
+          <p className="text-required mt-[12px] shrink-0 text-[14px] leading-none">{state.error}</p>
         ) : null}
 
-        <p className="mt-auto text-[14px] font-light leading-none text-white">
+        <p className="mt-auto shrink-0 text-[14px] font-light leading-none text-white">
           Pas encore regretteur(euse) ?{" "}
           <Link href="/inscription" className="font-semibold underline">
             Créer un compte
@@ -59,7 +59,7 @@ export function LoginCard() {
         <Button
           type="submit"
           disabled={pending}
-          className="mb-[33px] mt-[29px] h-[50px] w-full rounded-[25px] bg-white text-[15px] font-semibold text-black hover:bg-white/90"
+          className="mb-[33px] mt-[29px] h-[50px] w-full shrink-0 rounded-[25px] bg-white text-[15px] font-semibold text-black hover:bg-white/90"
         >
           {pending ? "…" : "Se connecter"}
         </Button>

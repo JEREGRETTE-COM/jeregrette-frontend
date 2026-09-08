@@ -2,11 +2,11 @@ import Image from "next/image";
 import Link from "next/link";
 
 import { signOutAction } from "@/app/actions";
-import { getSession } from "@/lib/session";
+import { getCurrentAuthor } from "@/lib/auth";
 
 /** Figma 85:1050 — 110px blurred bar over the feed. */
 export async function AppHeader() {
-  const session = await getSession();
+  const author = await getCurrentAuthor();
 
   return (
     <header className="sticky top-0 z-30 h-[110px] w-full bg-[rgba(22,22,22,0.75)] backdrop-blur-[25px]">
@@ -23,9 +23,9 @@ export async function AppHeader() {
           <span className="text-[20px] font-bold leading-none text-white">Je regrette</span>
         </Link>
 
-        {session ? (
+        {author ? (
           <div className="absolute right-[17px] top-[54px] flex h-[37px] items-center gap-[12px]">
-            <span className="text-[14px] font-medium text-white">{session.handle}</span>
+            <span className="text-[14px] font-medium text-white">{author.handle}</span>
             <form action={signOutAction}>
               <button
                 type="submit"

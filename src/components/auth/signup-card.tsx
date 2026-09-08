@@ -22,12 +22,23 @@ export function SignupCard() {
         <OAuthButtons />
         <AuthDivider />
         <AuthField
+          id="username"
+          name="username"
+          type="text"
+          label="Nom d’utilisateur"
+          autoComplete="username"
+          minLength={3}
+          maxLength={30}
+          pattern="[A-Za-z0-9_]+"
+          className="mt-[21px]"
+        />
+        <AuthField
           id="email"
           name="email"
           type="email"
           label="Adresse Email"
           autoComplete="email"
-          className="mt-[21px]"
+          className="mt-[11px]"
         />
         <AuthField
           id="password"
@@ -38,8 +49,17 @@ export function SignupCard() {
           minLength={8}
           className="mt-[11px]"
         />
+        <AuthField
+          id="password_confirmation"
+          name="password_confirmation"
+          type="password"
+          label="Confirmer le mot de passe"
+          autoComplete="new-password"
+          minLength={8}
+          className="mt-[11px]"
+        />
 
-        <p className="mt-[18px] text-[14px] font-light leading-none text-white">
+        <p className="mt-[18px] shrink-0 text-[14px] font-light leading-none text-white">
           Vous êtes déja regretteur(euse) ?{" "}
           <Link href="/connexion" className="font-semibold underline">
             Se connecter
@@ -47,10 +67,10 @@ export function SignupCard() {
         </p>
 
         {state.error ? (
-          <p className="text-required mt-[12px] text-[14px] leading-none">{state.error}</p>
+          <p className="text-required mt-[12px] shrink-0 text-[14px] leading-none">{state.error}</p>
         ) : null}
 
-        <p className="text-legal mx-auto mt-auto max-w-[343px] text-center text-[14px] leading-[15px]">
+        <p className="text-legal mx-auto mt-[24px] max-w-[343px] shrink-0 text-center text-[14px] leading-[15px]">
           En continuant, tu acceptes notre
           <br />
           <Link href="/contrat-utilisation" className="font-semibold text-white underline">
@@ -66,7 +86,7 @@ export function SignupCard() {
         <Button
           type="submit"
           disabled={pending}
-          className="mb-[33px] mt-[29px] h-[50px] w-full rounded-[25px] bg-white text-[15px] font-semibold text-black hover:bg-white/90"
+          className="mb-[33px] mt-[29px] h-[50px] w-full shrink-0 rounded-[25px] bg-white text-[15px] font-semibold text-black hover:bg-white/90"
         >
           {pending ? "…" : "Continuer"}
         </Button>

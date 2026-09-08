@@ -26,9 +26,10 @@ export function ReactionBar({
         addOptimistic(String(formData.get("reaction")) as ReactionId);
         return toggleReactionAction(formData);
       }}
-      className="bg-surface absolute left-[12px] top-[11px] flex h-[34px] w-[190px] items-center rounded-[20px] p-[2px]"
+      className="bg-surface absolute left-[12px] top-[11px] flex h-[34px] w-[314px] items-center rounded-[20px] p-[2px]"
     >
       <input type="hidden" name="itemId" value={itemId} />
+      <input type="hidden" name="current" value={state.reacted ?? ""} />
       {reactions.map((reaction) => {
         const active = reaction.id === state.reacted;
         return (
