@@ -6,7 +6,7 @@ import { ImageResponse } from "next/og";
 import { getAccessToken } from "@/lib/auth";
 import { toRegret } from "@/lib/feed-mapping";
 import { getPost } from "@/lib/posts";
-import { initial } from "@/lib/utils";
+import { initial, regretFontSize } from "@/lib/utils";
 
 /** Square, the format WhatsApp previews best. */
 const SIZE = 1080;
@@ -95,7 +95,7 @@ export async function GET(
               display: "flex",
               width: px(331),
               textAlign: "center",
-              fontSize: px(20),
+              fontSize: px(regretFontSize(regret.text)),
               fontWeight: 600,
               color: "#ffffff",
               lineHeight: 1.4,

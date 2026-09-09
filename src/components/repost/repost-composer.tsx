@@ -67,6 +67,7 @@ export function RepostComposer({
         <RegretSurface
           regret={regret}
           authorOffset={25}
+          compact
           className="border-surface-border h-[369px] w-full max-w-[474px] rounded-[15px] border-2"
         />
       </div>

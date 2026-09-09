@@ -1,5 +1,5 @@
 import { AuthorRow } from "@/components/feed/author-row";
-import { cn } from "@/lib/utils";
+import { cn, regretFontSize } from "@/lib/utils";
 import type { Regret } from "@/types";
 
 /** Underline "jeregrette.com" the way the design does. */
@@ -24,11 +24,14 @@ export function RegretSurface({
   className,
   textClassName,
   authorOffset = 11,
+  compact = false,
 }: {
   regret: Regret;
   className?: string;
   textClassName?: string;
   authorOffset?: number;
+  /** Quoted inside a repost, where there is far less room. */
+  compact?: boolean;
 }) {
   return (
     <div
@@ -38,14 +41,23 @@ export function RegretSurface({
       }}
     >
       <AuthorRow author={regret.author} time={regret.time} offset={authorOffset} />
-      <p
-        className={cn(
-          "absolute left-1/2 top-1/2 w-[331px] max-w-[90%] -translate-x-1/2 -translate-y-1/2 whitespace-pre-line text-center text-[20px] font-semibold text-white",
-          textClassName,
-        )}
-      >
-        {renderText(regret.text)}
-      </p>
+
+      {/*
+        Padded by the height of the author row on both sides: the message stays
+        centred where the design puts it, but can no longer grow underneath the
+        handle or the action bar.
+      */}
+      <div className="flex h-full items-center justify-center px-4 py-[55px]">
+        <p
+          className={cn(
+            "max-h-full w-[331px] max-w-full overflow-hidden whitespace-pre-line text-center font-semibold leading-[1.35] text-white",
+            textClassName,
+          )}
+          style={{ fontSize: regretFontSize(regret.text, compact) }}
+        >
+          {renderText(regret.text)}
+        </p>
+      </div>
     </div>
   );
 }

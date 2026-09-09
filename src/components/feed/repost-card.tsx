@@ -25,6 +25,7 @@ export function RepostCard({ repost }: { repost: Repost }) {
         <RegretSurface
           regret={repost.regret}
           authorOffset={14}
+          compact
           textClassName="w-[226px] max-w-full"
           className="border-surface-border min-h-0 w-full flex-1 rounded-[15px] border-2"
         />
