@@ -47,7 +47,13 @@ export function RegretSurface({
         centred where the design puts it, but can no longer grow underneath the
         handle or the action bar.
       */}
-      <div className="flex h-full items-center justify-center px-4 py-[55px]">
+      <div
+        className={cn(
+          "flex h-full items-center justify-center px-4 pt-[55px]",
+          // no action bar under a quoted post, so it keeps that room for text
+          compact ? "pb-[16px]" : "pb-[55px]",
+        )}
+      >
         <p
           className={cn(
             "max-h-full w-[331px] max-w-full overflow-hidden whitespace-pre-line text-center font-semibold leading-[1.35] text-white",
