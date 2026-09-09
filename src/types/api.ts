@@ -68,8 +68,9 @@ export type ApiPost = {
   original_post?: ApiPost | Record<string, never> | null;
 };
 
+/** Confirmed against /docs/api.json — the query parameters carry these names. */
 export type PostCursor = {
-  cursor_score: string;
+  cursor_created_at: string;
   cursor_id: string;
 };
 

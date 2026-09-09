@@ -24,6 +24,10 @@
   --color-divider: #5a5a5a;
   --color-legal: #595959;
   --color-required: #ff2600;
+  --color-menu: #101010;
+  --color-row: #1a1a1a;
+  --color-danger: #ff5252;
+  --color-label: #6f6f70;
 }
 
 @media (prefers-color-scheme: dark) {

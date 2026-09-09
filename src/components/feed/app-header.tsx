@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 
-import { signOutAction } from "@/app/actions";
+import { AccountMenu } from "@/components/menu/account-menu";
 import { getCurrentAuthor } from "@/lib/auth";
 
 /**
@@ -29,18 +29,12 @@ export async function AppHeader() {
         </Link>
 
         {author ? (
-          <div className="flex min-w-0 items-center gap-[10px]">
+          <div className="flex min-w-0 items-center gap-[12px]">
             <span className="hidden truncate text-[14px] font-medium text-white sm:inline">
               {author.handle}
             </span>
-            <form action={signOutAction}>
-              <button
-                type="submit"
-                className="h-[37px] shrink-0 rounded-[10px] border-[0.5px] border-[#c5c5c5] px-[12px] text-[13px] font-medium text-white transition-colors hover:bg-white/5 sm:text-[14px]"
-              >
-                Se déconnecter
-              </button>
-            </form>
+            {/* Signing out now lives inside the menu, as in Figma 131:968. */}
+            <AccountMenu author={author} />
           </div>
         ) : (
           <Link

@@ -12,7 +12,8 @@ import {
   repost,
   setReaction,
 } from "@/lib/posts";
-import type { AuthResponse, ReactionType } from "@/types/api";
+import { loadFeedPage } from "@/lib/feed";
+import type { AuthResponse, PostCursor, ReactionType } from "@/types/api";
 
 export type FormState = { error?: string };
 
@@ -167,4 +168,9 @@ export async function toggleReactionAction(formData: FormData) {
   else await setReaction(postId, reaction, token);
 
   revalidatePath("/");
+}
+
+export async function loadMoreFeedAction(cursor: PostCursor) {
+  const page = await loadFeedPage(cursor);
+  return page ?? { items: [], cursor: null, hasMore: false };
 }

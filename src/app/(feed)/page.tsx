@@ -1,8 +1,10 @@
 import Link from "next/link";
 
+import { BackToTop } from "@/components/feed/back-to-top";
+import { LoadMore } from "@/components/feed/load-more";
 import { RegretCard } from "@/components/feed/regret-card";
 import { RepostCard } from "@/components/feed/repost-card";
-import { loadFeed } from "@/lib/feed";
+import { loadFeedPage } from "@/lib/feed";
 
 export const dynamic = "force-dynamic";
 
@@ -27,11 +29,11 @@ function SignedOut() {
 }
 
 export default async function HomePage() {
-  const feed = await loadFeed();
+  const page = await loadFeedPage();
 
-  if (!feed) return <SignedOut />;
+  if (!page) return <SignedOut />;
 
-  if (feed.length === 0) {
+  if (page.items.length === 0) {
     return (
       <div className="mx-auto w-full max-w-[599px] px-4 py-20 text-center">
         <p className="text-muted text-[15px]">
@@ -42,14 +44,26 @@ export default async function HomePage() {
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-[599px] flex-col gap-[10px] px-3 pb-[140px] pt-[10px] sm:px-0 sm:pb-[180px]">
-      {feed.map((item) =>
-        item.kind === "regret" ? (
-          <RegretCard key={item.regret.id} regret={item.regret} />
-        ) : (
-          <RepostCard key={item.repost.id} repost={item.repost} />
-        ),
-      )}
-    </div>
+    <>
+      <div className="mx-auto flex w-full max-w-[599px] flex-col gap-[10px] px-3 pb-[140px] pt-[10px] sm:px-0 sm:pb-[180px]">
+        {page.items.map((item) =>
+          item.kind === "regret" ? (
+            <RegretCard key={item.regret.id} regret={item.regret} />
+          ) : (
+            <RepostCard key={item.repost.id} repost={item.repost} />
+          ),
+        )}
+
+        <LoadMore
+          initialIds={page.items.map((item) =>
+            item.kind === "regret" ? item.regret.id : item.repost.id,
+          )}
+          initialCursor={page.cursor}
+          initialHasMore={page.hasMore}
+        />
+      </div>
+
+      <BackToTop />
+    </>
   );
 }

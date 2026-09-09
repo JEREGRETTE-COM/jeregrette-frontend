@@ -27,9 +27,8 @@ export async function listPosts({
   limit?: number;
 }) {
   const query = new URLSearchParams();
-  // Names mirror meta.next_cursor; unverified until a token exists to test with.
   if (cursor) {
-    query.set("cursor_score", cursor.cursor_score);
+    query.set("cursor_created_at", cursor.cursor_created_at);
     query.set("cursor_id", cursor.cursor_id);
   }
   if (limit) query.set("limit", String(limit));
