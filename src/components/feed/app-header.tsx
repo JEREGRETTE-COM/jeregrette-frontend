@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import { AccountMenu } from "@/components/menu/account-menu";
 import { getCurrentAuthor } from "@/lib/auth";
+import { cn } from "@/lib/utils";
 
 /**
  * Figma 85:1050 — blurred bar over the feed. The design pins its content to the
@@ -23,7 +24,14 @@ export async function AppHeader() {
             unoptimized
             className="h-[30px] w-[36px] shrink-0 sm:h-[38px] sm:w-[46px]"
           />
-          <span className="truncate text-[17px] font-bold leading-none text-white sm:text-[20px]">
+          <span
+            className={cn(
+              "truncate text-[17px] font-bold leading-none text-white sm:text-[20px]",
+              // signed out there are two actions on the right; the wordmark is
+              // the first thing that has to give on a narrow screen
+              author ? "" : "hidden min-[400px]:inline",
+            )}
+          >
             Je regrette
           </span>
         </Link>
@@ -37,12 +45,23 @@ export async function AppHeader() {
             <AccountMenu author={author} />
           </div>
         ) : (
-          <Link
-            href="/inscription"
-            className="flex h-[37px] shrink-0 items-center justify-center rounded-[10px] bg-white px-[14px] text-[13px] font-bold text-black transition-opacity hover:opacity-90 sm:w-[142px] sm:px-0 sm:text-[14px]"
-          >
-            Créer un compte
-          </Link>
+          <div className="flex shrink-0 items-center gap-[10px] sm:gap-[14px]">
+            {/* secondary, so the white pill stays the single primary action */}
+            <Link
+              href="/connexion"
+              className="shrink-0 text-[13px] font-medium text-white transition-opacity hover:opacity-80 sm:text-[14px]"
+            >
+              Se connecter
+            </Link>
+            <Link
+              href="/inscription"
+              className="flex h-[37px] shrink-0 items-center justify-center rounded-[10px] bg-white px-[14px] text-[13px] font-bold text-black transition-opacity hover:opacity-90 sm:w-[142px] sm:px-0 sm:text-[14px]"
+            >
+              {/* the long label crowds the wordmark out below sm */}
+              <span className="sm:hidden">S’inscrire</span>
+              <span className="hidden sm:inline">Créer un compte</span>
+            </Link>
+          </div>
         )}
       </div>
     </header>
