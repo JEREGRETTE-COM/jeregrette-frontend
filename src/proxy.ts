@@ -9,7 +9,7 @@ import {
 } from "@/lib/auth";
 
 /**
- * Sends every other hostname to the canonical one, path and query intact.
+ * Sends the *.vercel.app addresses to the canonical site, path and query intact.
  *
  * Only in production: preview deployments each get their own URL and must stay
  * reachable, and localhost must not bounce to the live site.
@@ -28,7 +28,10 @@ function canonicalRedirect(request: NextRequest) {
   }
 
   const host = request.headers.get("host") ?? request.nextUrl.host;
-  if (host === target.host) return null;
+  // Choosing between jeregrette.com and www belongs to Vercel's domain settings.
+  // Redirecting custom domains here as well loops forever as soon as the two
+  // disagree (Vercel 308s to www, this 308s back).
+  if (host === target.host || !host.endsWith(".vercel.app")) return null;
 
   const destination = new URL(request.nextUrl.pathname + request.nextUrl.search, target);
   // 308 keeps the method and tells search engines the move is permanent.
