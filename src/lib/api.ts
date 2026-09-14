@@ -5,10 +5,31 @@
  * The host answers plain HTTP with a 301 to HTTPS — always call the https origin
  * so credentials are never sent in clear over the first hop.
  */
-const BASE_URL = (
-  process.env.API_URL ??
-  "https://jeregrette-api.benrango.com/api"
-).replace(/\/$/, "");
+const DEFAULT_API_URL = "https://jeregrette-api.benrango.com/api";
+
+/**
+ * Plain http is upgraded for any real host. The API answers it with a 301 to
+ * https, and fetch replays a redirected POST as a GET: login, posting and
+ * reacting would all fail with "The GET method is not supported", after the
+ * password had already crossed the network in clear. Local backends keep http.
+ */
+export function normalizeBaseUrl(raw: string) {
+  const url = new URL(raw.trim());
+  const local = url.hostname === "localhost" || url.hostname === "127.0.0.1";
+  if (url.protocol === "http:" && !local) url.protocol = "https:";
+  return url.toString().replace(/\/$/, "");
+}
+
+function resolveBaseUrl() {
+  try {
+    return normalizeBaseUrl(process.env.API_URL || DEFAULT_API_URL);
+  } catch {
+    console.error("[api] API_URL is not a valid URL, falling back to the default");
+    return DEFAULT_API_URL;
+  }
+}
+
+const BASE_URL = resolveBaseUrl();
 
 /** Laravel validation payload: { message, errors: { field: [msg, ...] } } */
 type LaravelError = {
@@ -26,10 +47,15 @@ export class ApiError extends Error {
     this.name = "ApiError";
   }
 
-  /** The message a form should show: first field error, else the summary. */
+  /**
+   * The message a form should show: first field error, else the summary. The
+   * backend sometimes sends raw translation keys ("validation.required_without"),
+   * which must never reach the screen.
+   */
   get displayMessage() {
     const first = Object.values(this.errors ?? {})[0]?.[0];
-    return first ?? this.message;
+    const message = first ?? this.message;
+    return /^[a-z_]+(\.[a-z_]+)+/.test(message) ? "Certaines informations sont invalides." : message;
   }
 
   get isUnauthenticated() {
