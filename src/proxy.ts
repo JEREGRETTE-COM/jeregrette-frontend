@@ -9,6 +9,33 @@ import {
 } from "@/lib/auth";
 
 /**
+ * Sends every other hostname to the canonical one, path and query intact.
+ *
+ * Only in production: preview deployments each get their own URL and must stay
+ * reachable, and localhost must not bounce to the live site.
+ */
+function canonicalRedirect(request: NextRequest) {
+  if (process.env.VERCEL_ENV !== "production") return null;
+
+  const canonical = process.env.NEXT_PUBLIC_SITE_URL;
+  if (!canonical) return null;
+
+  let target: URL;
+  try {
+    target = new URL(canonical);
+  } catch {
+    return null;
+  }
+
+  const host = request.headers.get("host") ?? request.nextUrl.host;
+  if (host === target.host) return null;
+
+  const destination = new URL(request.nextUrl.pathname + request.nextUrl.search, target);
+  // 308 keeps the method and tells search engines the move is permanent.
+  return NextResponse.redirect(destination, 308);
+}
+
+/**
  * Renews the access token before the page renders — the only place that can,
  * since Server Components cannot write cookies.
  *
@@ -16,6 +43,9 @@ import {
  * control stays in the pages and actions, which check the session themselves.
  */
 export async function proxy(request: NextRequest) {
+  const redirect = canonicalRedirect(request);
+  if (redirect) return redirect;
+
   const hasAccess = request.cookies.has(ACCESS_COOKIE);
   const refreshToken = request.cookies.get(REFRESH_COOKIE)?.value;
 

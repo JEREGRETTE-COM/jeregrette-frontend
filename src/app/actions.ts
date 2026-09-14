@@ -4,20 +4,35 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { api, ApiError } from "@/lib/api";
-import { clearSession, getAccessToken, saveSession } from "@/lib/auth";
+import {
+  clearSession,
+  getAccessToken,
+  getCurrentUser,
+  getRefreshToken,
+  saveSession,
+} from "@/lib/auth";
 import {
   createPost,
+  deletePost,
   MAX_CONTENT,
   removeReaction,
   repost,
   setReaction,
+  updatePostSettings,
+  type PostSettings,
 } from "@/lib/posts";
-import { loadFeedPage } from "@/lib/feed";
+import { loadMoreFeed } from "@/lib/feed";
+import { markAllNotificationsRead, markNotificationRead } from "@/lib/notifications";
+import { reactions } from "@/lib/reactions";
+import { MAX_BIO, updateMe, type ProfileUpdate } from "@/lib/users";
+import { isHttpsUrl } from "@/lib/utils";
 import type { AuthResponse, PostCursor, ReactionType } from "@/types/api";
 
 export type FormState = { error?: string };
 
 const MIN_PASSWORD = 8;
+/** Backend limit on register. */
+const MAX_EMAIL = 255;
 /** Mirrors the backend rule: 3-30 characters, letters, digits and underscore. */
 const USERNAME_PATTERN = /^[A-Za-z0-9_]{3,30}$/;
 
@@ -36,7 +51,11 @@ export async function signUpAction(
         "Nom d’utilisateur : 3 à 30 caractères, lettres, chiffres et underscore uniquement.",
     };
   }
-  if (!email.includes("@")) return { error: "Adresse email invalide." };
+  // optional on this backend, so only checked when given
+  if (email && !email.includes("@")) return { error: "Adresse email invalide." };
+  if (email.length > MAX_EMAIL) {
+    return { error: `Adresse email : ${MAX_EMAIL} caractères maximum.` };
+  }
   if (password.length < MIN_PASSWORD) {
     return { error: `Mot de passe : ${MIN_PASSWORD} caractères minimum.` };
   }
@@ -50,7 +69,7 @@ export async function signUpAction(
       method: "POST",
       body: {
         username,
-        email,
+        ...(email ? { email } : {}),
         password,
         password_confirmation: passwordConfirmation,
       },
@@ -72,19 +91,27 @@ export async function signInAction(
   _state: FormState,
   formData: FormData,
 ): Promise<FormState> {
-  const email = String(formData.get("email") ?? "").trim();
+  const identifier = String(formData.get("identifier") ?? "").trim();
   const password = String(formData.get("password") ?? "");
+
+  // An "@" is the only thing that tells the two apart: usernames cannot
+  // contain one, the backend rejects the character at registration.
+  const looksLikeEmail = identifier.includes("@");
 
   let auth: AuthResponse;
   try {
     auth = await api<AuthResponse>("/auth/login", {
       method: "POST",
-      body: { email, password },
+      body: looksLikeEmail
+        ? { email: identifier, password }
+        : { username: identifier, password },
     });
   } catch (error) {
     if (error instanceof ApiError) {
       // The backend answers 401 "Invalid credentials." in English.
-      if (error.status === 401) return { error: "Email ou mot de passe incorrect." };
+      if (error.status === 401) {
+        return { error: "Identifiant ou mot de passe incorrect." };
+      }
       return { error: error.displayMessage };
     }
     throw error;
@@ -96,10 +123,15 @@ export async function signInAction(
 }
 
 export async function signOutAction() {
-  const token = await getAccessToken();
+  const [token, refreshToken] = await Promise.all([getAccessToken(), getRefreshToken()]);
   if (token) {
-    // A failed revocation must not trap the user in a signed-in shell.
-    await api("/auth/logout", { method: "POST", token }).catch(() => {});
+    // Revoke the refresh token too, or it would keep minting sessions after
+    // logout. A failed revocation must not trap the user in a signed-in shell.
+    await api("/auth/logout", {
+      method: "POST",
+      token,
+      body: refreshToken ? { refresh_token: refreshToken } : undefined,
+    }).catch(() => {});
   }
   await clearSession();
   revalidatePath("/", "layout");
@@ -140,6 +172,7 @@ export async function publishRepostAction(
 
   const postId = String(formData.get("regretId") ?? "");
   const comment = String(formData.get("comment") ?? "").trim();
+  if (!postId) return { error: "Regret introuvable." };
   if (comment.length > MAX_CONTENT) {
     return { error: `Ton commentaire dépasse ${MAX_CONTENT} caractères.` };
   }
@@ -147,30 +180,160 @@ export async function publishRepostAction(
   try {
     await repost(postId, comment, token);
   } catch (error) {
-    if (error instanceof ApiError) return { error: error.displayMessage };
+    if (error instanceof ApiError) {
+      if (error.isUnauthenticated) redirect("/connexion");
+      if (error.status === 403) return { error: "L’auteur n’autorise pas cette republication." };
+      if (error.status === 404) return { error: "Ce regret n’existe plus." };
+      return { error: error.displayMessage };
+    }
     throw error;
   }
 
-  revalidatePath("/");
+  // The repost lands on the feed, the reposter's profile and the counters.
+  revalidatePath("/", "layout");
   redirect("/");
 }
+
+const REACTION_IDS = new Set<string>(reactions.map((reaction) => reaction.id));
 
 export async function toggleReactionAction(formData: FormData) {
   const token = await getAccessToken();
   if (!token) redirect("/inscription");
 
   const postId = String(formData.get("itemId") ?? "");
-  const reaction = String(formData.get("reaction") ?? "") as ReactionType;
+  const reaction = String(formData.get("reaction") ?? "");
   const current = String(formData.get("current") ?? "");
+  // Form data is user-controlled: only the documented types reach the API.
+  if (!postId || !REACTION_IDS.has(reaction)) return;
 
-  // Tapping the active reaction clears it, exactly like the optimistic update.
-  if (current === reaction) await removeReaction(postId, token);
-  else await setReaction(postId, reaction, token);
+  try {
+    // Tapping the active reaction clears it, exactly like the optimistic update.
+    if (current === reaction) await removeReaction(postId, token);
+    else await setReaction(postId, reaction as ReactionType, token);
+  } catch (error) {
+    if (!(error instanceof ApiError)) throw error;
+    if (error.isUnauthenticated) redirect("/connexion");
+    // Timeout, deleted post, refused vote: the optimistic chip falls back to the
+    // server state once the action settles, so a failure must not crash the page.
+    return;
+  }
 
-  revalidatePath("/");
+  // Reaction bars also live on /profil, /u/[id] and /regret/[id]; a bare "/"
+  // would only refresh the home page and leave those showing the old vote.
+  revalidatePath("/", "layout");
 }
 
-export async function loadMoreFeedAction(cursor: PostCursor) {
-  const page = await loadFeedPage(cursor);
+export async function loadMoreFeedAction(cursor: PostCursor | null, seenIds: string[]) {
+  const page = await loadMoreFeed(cursor, seenIds);
   return page ?? { items: [], cursor: null, hasMore: false };
+}
+
+export async function updatePostSettingsAction(postId: string, settings: PostSettings) {
+  const token = await getAccessToken();
+  if (!token) return { error: "Session expirée." };
+
+  try {
+    await updatePostSettings(postId, settings, token);
+  } catch (error) {
+    if (error instanceof ApiError) {
+      if (error.status === 403) return { error: "Tu ne peux modifier que tes propres regrets." };
+      return { error: error.displayMessage };
+    }
+    throw error;
+  }
+
+  revalidatePath("/");
+  revalidatePath("/profil");
+  return {};
+}
+
+export async function deletePostAction(postId: string) {
+  const token = await getAccessToken();
+  if (!token) return { error: "Session expirée." };
+
+  try {
+    await deletePost(postId, token);
+  } catch (error) {
+    if (error instanceof ApiError) {
+      if (error.status === 403) return { error: "Tu ne peux supprimer que tes propres regrets." };
+      return { error: error.displayMessage };
+    }
+    throw error;
+  }
+
+  revalidatePath("/");
+  revalidatePath("/profil");
+  return {};
+}
+
+export async function updateProfileAction(formData: FormData): Promise<FormState> {
+  const [token, me] = await Promise.all([getAccessToken(), getCurrentUser()]);
+  if (!token || !me) return { error: "Session expirée, reconnecte-toi." };
+
+  const username = String(formData.get("username") ?? "").trim().replace(/^@/, "");
+  const bio = String(formData.get("bio") ?? "").trim();
+  const avatarUrl = String(formData.get("avatar_url") ?? "").trim();
+
+  if (!USERNAME_PATTERN.test(username)) {
+    return { error: "Nom d’utilisateur : 3 à 30 caractères, lettres, chiffres ou _." };
+  }
+  if (bio.length > MAX_BIO) return { error: `Ta bio dépasse ${MAX_BIO} caractères.` };
+  // Other viewers' browsers and the share-image route load this link.
+  if (avatarUrl && !isHttpsUrl(avatarUrl)) {
+    return { error: "Le lien de la photo doit commencer par https://" };
+  }
+
+  // Only what changed goes out: resending your own username could trip the
+  // uniqueness rule. Empty fields clear the value rather than storing "".
+  const update: ProfileUpdate = {};
+  if (username !== me.username) update.username = username;
+  if ((bio || null) !== (me.bio || null)) update.bio = bio || null;
+  if ((avatarUrl || null) !== (me.avatar_url || null)) update.avatar_url = avatarUrl || null;
+  if (Object.keys(update).length === 0) return {};
+
+  try {
+    await updateMe(update, token);
+  } catch (error) {
+    if (error instanceof ApiError) {
+      if (error.isUnauthenticated) return { error: "Session expirée, reconnecte-toi." };
+      if (error.errors?.username) return { error: "Ce nom d’utilisateur est déjà pris." };
+      if (error.errors?.avatar_url) return { error: "Le lien de la photo n’est pas valide." };
+      return { error: error.displayMessage };
+    }
+    throw error;
+  }
+
+  // The handle and avatar also appear in the header menu and on every card.
+  revalidatePath("/", "layout");
+  return {};
+}
+
+export async function markNotificationReadAction(id: string): Promise<FormState> {
+  const token = await getAccessToken();
+  if (!token) return { error: "Session expirée, reconnecte-toi." };
+
+  try {
+    await markNotificationRead(id, token);
+  } catch (error) {
+    if (error instanceof ApiError) return { error: error.displayMessage };
+    throw error;
+  }
+  // the header badge and the list both show the unread count
+  revalidatePath("/", "layout");
+  return {};
+}
+
+export async function markAllNotificationsReadAction(): Promise<FormState> {
+  const token = await getAccessToken();
+  if (!token) return { error: "Session expirée, reconnecte-toi." };
+
+  try {
+    await markAllNotificationsRead(token);
+  } catch (error) {
+    if (error instanceof ApiError) return { error: error.displayMessage };
+    throw error;
+  }
+  // the header badge and the list both show the unread count
+  revalidatePath("/", "layout");
+  return {};
 }

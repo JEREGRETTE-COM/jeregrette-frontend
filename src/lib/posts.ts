@@ -27,14 +27,18 @@ export async function listPosts({
   limit?: number;
 }) {
   const query = new URLSearchParams();
-  if (cursor) {
-    query.set("cursor_created_at", cursor.cursor_created_at);
-    query.set("cursor_id", cursor.cursor_id);
+  for (const [key, value] of Object.entries(cursor ?? {})) {
+    if (value !== null && value !== undefined) query.set(key, String(value));
   }
   if (limit) query.set("limit", String(limit));
 
   const suffix = query.size ? `?${query}` : "";
   return api<ApiList<ApiPost>>(`/posts${suffix}`, { token });
+}
+
+/** Anonymous: ten posts drawn at random, no cursor, `limit` ignored. */
+export async function listPublicPosts() {
+  return api<{ data: ApiPost[] }>("/public/posts");
 }
 
 export const MAX_CONTENT = 500;
@@ -51,6 +55,24 @@ export async function createPost(body: CreatePostBody, token: string) {
   const { data } = await api<ApiItem<ApiPost>>("/posts", {
     method: "POST",
     body,
+    token,
+  });
+  return data;
+}
+
+export type PostSettings = {
+  allow_repost?: boolean;
+  allow_opinion_on_repost?: boolean;
+};
+
+export async function updatePostSettings(
+  id: string,
+  settings: PostSettings,
+  token: string,
+) {
+  const { data } = await api<ApiItem<ApiPost>>(`/posts/${id}/settings`, {
+    method: "PATCH",
+    body: settings,
     token,
   });
   return data;
@@ -99,20 +121,32 @@ export async function getReactionBreakdown(postId: string, token: string) {
 }
 
 /**
- * The quoted post's `allow_repost` gates this, and `allow_opinion_on_repost`
- * gates the comment. The request body is not documented yet — `content` is
- * inferred from the composer and unverified.
+ * `content` is the optional comment: up to 500 characters, null when empty. The
+ * quoted post's `allow_repost` gates the call and `allow_opinion_on_repost`
+ * gates the comment.
  */
 export async function repost(postId: string, content: string, token: string) {
   const { data } = await api<ApiItem<ApiPost>>(`/posts/${postId}/repost`, {
     method: "POST",
-    body: content ? { content } : {},
+    body: { content: content || null },
     token,
   });
   return data;
 }
 
-export async function listReposts(postId: string, token: string, page?: number) {
-  const suffix = page ? `?page=${page}` : "";
+/**
+ * Pages by number, unlike the feed. `limit` defaults to 20; `page` is not in the
+ * documentation, only implied by `meta.current_page` and `meta.last_page`.
+ */
+export async function listReposts(
+  postId: string,
+  token: string,
+  { limit, page }: { limit?: number; page?: number } = {},
+) {
+  const query = new URLSearchParams();
+  if (limit) query.set("limit", String(limit));
+  if (page) query.set("page", String(page));
+
+  const suffix = query.size ? `?${query}` : "";
   return api<ApiPage<ApiPost>>(`/posts/${postId}/reposts${suffix}`, { token });
 }

@@ -18,11 +18,11 @@ export function LoginCard() {
     <AuthCard title="Connexion à" highlight="jeregrette.com">
       <form action={formAction} className="flex flex-1 flex-col">
         <AuthField
-          id="email"
-          name="email"
-          type="email"
-          label="Adresse Email"
-          autoComplete="email"
+          id="identifier"
+          name="identifier"
+          type="text"
+          label="Nom d’utilisateur ou email"
+          autoComplete="username"
           className="mt-[21px]"
         />
         <AuthField

@@ -1,49 +1,30 @@
 import { getAccessToken } from "@/lib/auth";
 import { toFeedItem } from "@/lib/feed-mapping";
-import { getReactionBreakdown, listPosts, type ReactionBreakdown } from "@/lib/posts";
+import {
+  getReactionBreakdown,
+  listPosts,
+  listPublicPosts,
+  type ReactionBreakdown,
+} from "@/lib/posts";
 import type { FeedItem } from "@/types";
 import type { ApiPost, PostCursor } from "@/types/api";
 
-/** How many posts the feed shows before older ones are dropped. */
-export const FEED_LIMIT = 200;
+/**
+ * What one call really returns. The documentation says `limit` defaults to 100,
+ * but the backend caps it at 50 whatever is requested (measured: 100, 150 and
+ * 300 all came back with 50 posts).
+ */
 const PAGE_SIZE = 50;
-const MAX_PAGES = 10;
 /** Parallel breakdown requests in flight. Enough to be quick, not a flood. */
 const BREAKDOWN_CONCURRENCY = 8;
 
-/**
- * Follows meta.next_cursor until the limit is reached. The seen-id guard also
- * protects against the cursor query parameters being wrong: an API that ignores
- * them would return the same page forever.
- */
-async function collectPosts(token: string, startCursor?: PostCursor) {
-  const posts: ApiPost[] = [];
-  const seen = new Set<string>();
-  let cursor: PostCursor | undefined = startCursor;
-  let hasMore = false;
-
-  for (let page = 0; page < MAX_PAGES && posts.length < FEED_LIMIT; page += 1) {
-    const { data, meta } = await listPosts({ token, cursor, limit: PAGE_SIZE });
-
-    const fresh = (data ?? []).filter((post) => !seen.has(post.id));
-    if (fresh.length === 0) break;
-
-    for (const post of fresh) {
-      seen.add(post.id);
-      posts.push(post);
-    }
-
-    if (!meta?.has_more || !meta.next_cursor) {
-      cursor = undefined;
-      break;
-    }
-    cursor = meta.next_cursor;
-    hasMore = true;
-  }
-
-  // Nothing is dropped: the loop stops before fetching past the limit.
-  return { posts, cursor: cursor ?? null, hasMore: hasMore && Boolean(cursor) };
-}
+export type FeedPage = {
+  items: FeedItem[];
+  /** null when the next batch must go through `limit` instead of the cursor. */
+  cursor: PostCursor | null;
+  /** The API's own `has_more`, even when nothing more could actually be fetched. */
+  hasMore: boolean;
+};
 
 /**
  * Per-reaction counts live on their own route, so each post needs a second
@@ -84,21 +65,85 @@ export async function toFeedItems(posts: ApiPost[], token: string) {
   return posts.map((post) => toFeedItem(post, breakdowns));
 }
 
-export type FeedPage = {
-  items: FeedItem[];
-  cursor: PostCursor | null;
-  hasMore: boolean;
-};
+/**
+ * What a visitor sees, from GET /public/posts. The API draws ten posts at random
+ * and offers no pagination; the reaction breakdown route refuses anonymous
+ * calls, so per-reaction counts cannot be shown.
+ */
+export async function loadPublicFeed(): Promise<FeedItem[]> {
+  try {
+    const { data } = await listPublicPosts();
+    return (data ?? []).map((post) => toFeedItem(post));
+  } catch {
+    return [];
+  }
+}
 
-/** One batch of up to FEED_LIMIT posts, plus where to resume. */
-export async function loadFeedPage(cursor?: PostCursor): Promise<FeedPage | null> {
+/** The first screen of the feed: one page of the API, one round trip. */
+export async function loadFeedPage(): Promise<FeedPage | null> {
   const token = await getAccessToken();
   if (!token) return null;
 
-  const batch = await collectPosts(token, cursor);
+  const { data, meta } = await listPosts({ token, limit: PAGE_SIZE });
+  const hasMore = Boolean(meta?.has_more);
+
+  // TEMP diagnostic (dev only): the new server hands back an empty feed.
+  if (process.env.NODE_ENV !== "production") {
+    console.info("[diag feed] GET /posts", {
+      count: data?.length ?? 0,
+      meta,
+      firstIds: (data ?? []).slice(0, 3).map((post) => post.id),
+    });
+  }
+
   return {
-    items: await toFeedItems(batch.posts, token),
-    cursor: batch.cursor,
-    hasMore: batch.hasMore,
+    items: await toFeedItems(data ?? [], token),
+    cursor: hasMore ? (meta?.next_cursor ?? null) : null,
+    hasMore,
+  };
+}
+
+/**
+ * The next batch after what is already on screen.
+ *
+ * 1. The cursor — the correct path. The backend ignores it today and hands back
+ *    the first page again, so its posts are all filtered out as already seen.
+ * 2. A longer list through `limit`, keeping only unseen posts. That only helps
+ *    once the backend stops capping `limit` at 50.
+ *
+ * Filtering happens before the breakdown calls, so re-fetched posts cost nothing
+ * beyond the list itself. When neither path brings anything new while the API
+ * still reports more, `hasMore` stays true: the caller then says the rest cannot
+ * be loaded, instead of claiming the feed has ended.
+ */
+export async function loadMoreFeed(
+  cursor: PostCursor | null,
+  seenIds: string[],
+): Promise<FeedPage | null> {
+  const token = await getAccessToken();
+  if (!token) return null;
+
+  const seen = new Set(seenIds);
+
+  if (cursor) {
+    const { data, meta } = await listPosts({ token, cursor, limit: PAGE_SIZE });
+    const fresh = (data ?? []).filter((post) => !seen.has(post.id));
+    if (fresh.length > 0) {
+      const hasMore = Boolean(meta?.has_more);
+      return {
+        items: await toFeedItems(fresh, token),
+        cursor: hasMore ? (meta?.next_cursor ?? null) : null,
+        hasMore,
+      };
+    }
+  }
+
+  const { data, meta } = await listPosts({ token, limit: seen.size + PAGE_SIZE });
+  const fresh = (data ?? []).filter((post) => !seen.has(post.id));
+
+  return {
+    items: await toFeedItems(fresh, token),
+    cursor: null,
+    hasMore: Boolean(meta?.has_more),
   };
 }

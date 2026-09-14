@@ -21,7 +21,7 @@ export default function PrivacyPage() {
       <p>Quand tu crées un compte :</p>
       <ul>
         <li>ton nom d’utilisateur, affiché publiquement sur chacune de tes publications ;</li>
-        <li>ton adresse email, jamais affichée aux autres membres ;</li>
+        <li>ton adresse email, facultative et jamais affichée aux autres membres ;</li>
         <li>
           ton mot de passe, conservé sous forme chiffrée et irréversible. Personne, nous
           compris, ne peut le lire.

@@ -47,6 +47,9 @@ export function toRegret(post: ApiPost, breakdown?: ReactionBreakdown): Regret {
   return {
     id: post.id,
     author: toAuthor(post.author),
+    authorId: post.author_id,
+    allowRepost: post.allow_repost,
+    allowOpinionOnRepost: post.allow_opinion_on_repost,
     time: relativeTime(post.created_at),
     text: post.content,
     background: backgroundFor(post.id),
@@ -72,6 +75,9 @@ export function toFeedItem(
       repost: {
         id: post.id,
         author: toAuthor(post.author),
+        authorId: post.author_id,
+        allowRepost: post.allow_repost,
+        allowOpinionOnRepost: post.allow_opinion_on_repost,
         time: relativeTime(post.created_at),
         comment: post.content,
         counts: countsFrom(breakdowns.get(post.id)),

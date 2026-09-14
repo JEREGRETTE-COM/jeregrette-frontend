@@ -3,21 +3,25 @@
 /** "EMAIL" is confirmed; the OAuth buttons imply others, hence the fallback. */
 export type AuthProvider = "EMAIL" | (string & {});
 
-/** GET /user — note it carries no posts_count. */
+/**
+ * UserResource, as /docs/api.json has it. `email` is optional and nullable,
+ * presumably for OAuth accounts that come without one; the dates can be null.
+ */
 export type ApiUser = {
   id: string;
   username: string;
-  email: string;
+  email?: string | null;
   avatar_url: string | null;
   bio: string | null;
   provider: AuthProvider;
-  created_at: string;
-  updated_at: string;
+  created_at: string | null;
+  updated_at: string | null;
 };
 
-/** The richer user embedded in register/login replies. */
+/** The same user as embedded in register/login replies and /users/me. */
 export type ApiAuthUser = ApiUser & {
-  posts_count: number;
+  /** Not required by the spec, so it can be missing. */
+  posts_count?: number;
 };
 
 export type AuthTokens = {
@@ -38,19 +42,21 @@ export type RefreshResponse = AuthTokens & {
   session_id: string;
 };
 
+/** From /docs/api.json. Presence of `original_post` stays the detection signal. */
+export type PostType = "ORIGINAL" | "REPOST";
+
 /** The values POST reactions accepts, and what `my_reaction` holds. */
 export type ReactionType = "LIKE" | "EMPATHY" | "SUPPORT" | "LAUGH" | "SAD";
 
 /**
- * A post. `type` distinguishes originals from reposts, but its values are not
- * documented yet — presence of `original_post` is the reliable signal.
+ * A post. `type` distinguishes originals from reposts.
  *
  * The backend serialises an absent `original_post` as `{}`, hence the loose type;
  * use `quotedPost()` rather than reading it directly.
  */
 export type ApiPost = {
   id: string;
-  type: string;
+  type: PostType;
   content: string;
   media_url: string | null;
   author: ApiAuthUser;
@@ -68,11 +74,12 @@ export type ApiPost = {
   original_post?: ApiPost | Record<string, never> | null;
 };
 
-/** Confirmed against /docs/api.json — the query parameters carry these names. */
-export type PostCursor = {
-  cursor_created_at: string;
-  cursor_id: string;
-};
+/**
+ * Opaque on purpose. The documentation and the live payload disagree on the key
+ * names (cursor_created_at vs cursor_score), so whatever meta.next_cursor holds
+ * is sent straight back as query parameters.
+ */
+export type PostCursor = Record<string, string | number>;
 
 export type PaginationMeta = {
   next_cursor: PostCursor | null;
@@ -114,4 +121,25 @@ export type ReactionSummary = {
   post_id: string;
   total: number;
   breakdown: Record<string, number | string>;
+};
+
+/**
+ * GET /notifications item. `data` is a string on the wire, most likely a
+ * JSON-encoded payload. `read_at` is documented as a plain string, but an
+ * unread notification can only carry null there.
+ */
+export type ApiNotification = {
+  id: string;
+  type: string | null;
+  data: string;
+  read_at: string | null;
+  created_at: string;
+};
+
+/** The cursors are returned, but GET /notifications accepts none as a parameter. */
+export type NotificationsMeta = {
+  next_cursor: string | null;
+  prev_cursor: string | null;
+  has_more: boolean;
+  unread_count: number;
 };

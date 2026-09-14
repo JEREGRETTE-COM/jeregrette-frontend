@@ -11,6 +11,25 @@ export function initial(handle: string) {
   return (handle.replace(/^@/, "")[0] ?? "?").toUpperCase();
 }
 
+/** True for an absolute https:// link, the only kind of avatar the app loads. */
+export function isHttpsUrl(value: string) {
+  try {
+    return new URL(value).protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * An avatar the app can render: an https link or a bundled /path. Anything else
+ * (http, a typo, a stray string stored through the API) falls back to the initial.
+ */
+export function safeAvatar(value: string | null | undefined) {
+  if (!value) return null;
+  if (value.startsWith("/") && !value.startsWith("//") && !value.includes("..")) return value;
+  return isHttpsUrl(value) ? value : null;
+}
+
 /**
  * The design sets 20px. Long regrets step down so they stay inside the card
  * instead of growing up into the author row.

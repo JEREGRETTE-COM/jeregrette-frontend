@@ -39,3 +39,21 @@ export function listMyPosts(token: string, cursor?: string) {
 export function listUserPosts(id: string, token: string, cursor?: string) {
   return listPostsPage(`/users/${id}/posts`, token, cursor);
 }
+
+/** Matches the backend limit on PATCH /users/me. */
+export const MAX_BIO = 280;
+
+export type ProfileUpdate = {
+  username?: string;
+  bio?: string | null;
+  avatar_url?: string | null;
+};
+
+export async function updateMe(update: ProfileUpdate, token: string) {
+  const { data } = await api<ApiItem<ApiAuthUser>>("/users/me", {
+    method: "PATCH",
+    body: update,
+    token,
+  });
+  return data;
+}

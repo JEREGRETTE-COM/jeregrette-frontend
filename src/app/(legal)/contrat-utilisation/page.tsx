@@ -22,7 +22,8 @@ export default function TermsPage() {
       <h2>2. Compte</h2>
       <p>
         Il faut avoir au moins 15 ans pour créer un compte. La création demande un nom
-        d’utilisateur, une adresse email et un mot de passe d’au moins 8 caractères.
+        d’utilisateur et un mot de passe d’au moins 8 caractères. L’adresse email est
+        facultative.
       </p>
       <ul>
         <li>

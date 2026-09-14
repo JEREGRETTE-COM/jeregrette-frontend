@@ -1,23 +1,18 @@
-"use client";
-
-import Image from "next/image";
 import { useRef, useState } from "react";
 
-/**
- * Shares the regret as a PNG through the native share sheet (WhatsApp included).
- * Browsers require navigator.share to run inside a user gesture, so the image is
- * prefetched on pointer-down and the click path uses the cached blob.
- * Falls back to a wa.me link when file sharing is unavailable.
- */
-export function ShareButton({
-  regretId,
-  text,
-  handle,
-}: {
+export type ShareTarget = {
   regretId: string;
   text: string;
   handle: string;
-}) {
+};
+
+/**
+ * Shares a regret as a PNG through the native share sheet (WhatsApp included).
+ * Browsers require navigator.share to run inside a user gesture, so callers
+ * prefetch the image on pointer-down and share on click. Falls back to a wa.me
+ * link when file sharing is unavailable.
+ */
+export function useShareRegret({ regretId, text, handle }: ShareTarget) {
   const [busy, setBusy] = useState(false);
   const cached = useRef<Promise<Blob> | null>(null);
 
@@ -38,12 +33,8 @@ export function ShareButton({
     });
   }
 
-  function pageUrl() {
-    return `${window.location.origin}/regret/${regretId}`;
-  }
-
   function caption() {
-    return `${text}\n\n— ${handle} sur jeregrette.com\n${pageUrl()}`;
+    return `${text}\n\n— ${handle} sur jeregrette.com\n${window.location.origin}/regret/${regretId}`;
   }
 
   function openWhatsApp() {
@@ -77,24 +68,5 @@ export function ShareButton({
     }
   }
 
-  return (
-    <button
-      type="button"
-      aria-label="Partager ce regret"
-      disabled={busy}
-      onPointerDown={prefetch}
-      onFocus={prefetch}
-      onClick={share}
-      className="bg-surface flex h-[34px] w-[38px] shrink-0 items-center justify-center rounded-[20px] disabled:opacity-60 sm:w-[44px]"
-    >
-      <Image
-        src="/icons/share.svg"
-        alt=""
-        width={20}
-        height={20}
-        unoptimized
-        className="h-[20px] w-[20px]"
-      />
-    </button>
-  );
+  return { share, prefetch, busy };
 }

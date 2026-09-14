@@ -7,7 +7,7 @@
  */
 const BASE_URL = (
   process.env.API_URL ??
-  "https://jeregrette-backend-production-b100.up.railway.app/api"
+  "https://jeregrette-api.benrango.com/api"
 ).replace(/\/$/, "");
 
 /** Laravel validation payload: { message, errors: { field: [msg, ...] } } */
@@ -55,14 +55,39 @@ export async function api<T>(path: string, options: RequestOptions = {}): Promis
   if (body !== undefined) headers["Content-Type"] = "application/json";
   if (token) headers.Authorization = `Bearer ${token}`;
 
+  const url = `${BASE_URL}${path.startsWith("/") ? path : `/${path}`}`;
+  const startedAt = Date.now();
+
+  // TEMP diagnostic (dev only): full trace of the feed request for the backend
+  // team. The bearer token is masked.
+  const trace =
+    process.env.NODE_ENV !== "production" && method === "GET" && /^\/posts(\?|$)/.test(path);
+  if (trace) {
+    console.info(`[api] → ${method} ${url}`, {
+      headers: { ...headers, ...(token ? { Authorization: "Bearer ***" } : {}) },
+      body: body ?? null,
+    });
+  }
+
   let response: Response;
   try {
-    response = await fetch(`${BASE_URL}${path.startsWith("/") ? path : `/${path}`}`, {
+    response = await fetch(url, {
       method,
       headers,
       body: body === undefined ? undefined : JSON.stringify(body),
     });
   } catch (cause) {
+    // Server-side log only; never the headers (bearer token) nor the body.
+    // undici hides the real reason (DNS, TLS, timeout...) in `cause.cause`.
+    const inner = (cause as { cause?: { code?: string; message?: string } })?.cause;
+    console.error("[api] network failure", {
+      method,
+      url,
+      ms: Date.now() - startedAt,
+      error: cause instanceof Error ? `${cause.name}: ${cause.message}` : String(cause),
+      code: inner?.code,
+      reason: inner?.message,
+    });
     const error = new ApiError(0, "Le serveur est injoignable.");
     error.cause = cause;
     throw error;
@@ -71,6 +96,12 @@ export async function api<T>(path: string, options: RequestOptions = {}): Promis
   if (response.status === 204) return undefined as T;
 
   const text = await response.text();
+  if (trace) {
+    console.info(
+      `[api] ← ${response.status} ${response.statusText} ${method} ${url} in ${Date.now() - startedAt}ms`,
+      `\n${text.slice(0, 2000)}`,
+    );
+  }
   let payload: unknown = undefined;
   if (text) {
     try {

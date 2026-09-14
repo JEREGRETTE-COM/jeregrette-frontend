@@ -6,7 +6,7 @@ import { ImageResponse } from "next/og";
 import { getAccessToken } from "@/lib/auth";
 import { toRegret } from "@/lib/feed-mapping";
 import { getPost } from "@/lib/posts";
-import { initial, regretFontSize } from "@/lib/utils";
+import { initial, regretFontSize, safeAvatar } from "@/lib/utils";
 
 /** Square, the format WhatsApp previews best. */
 const SIZE = 1080;
@@ -31,9 +31,13 @@ const fonts = {
  * its own, or one of the bundled placeholders, which must be inlined.
  */
 function avatarSource(avatar: string) {
-  if (/^https?:\/\//.test(avatar)) return avatar;
+  // The server fetches remote avatars itself: only https links, and only
+  // bundled paths without "..", ever leave this function.
+  const safe = safeAvatar(avatar);
+  if (!safe) return null;
+  if (safe.startsWith("https://")) return safe;
   try {
-    const bytes = readFileSync(asset(avatar.replace(/^\//, "")));
+    const bytes = readFileSync(asset(safe.replace(/^\//, "")));
     return `data:image/png;base64,${bytes.toString("base64")}`;
   } catch {
     return null;

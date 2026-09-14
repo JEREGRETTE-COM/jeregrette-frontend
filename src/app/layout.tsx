@@ -29,7 +29,8 @@ export const metadata: Metadata = {
   description: siteConfig.description,
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+/** `modal` is the @modal slot: filled only when a route is intercepted into a dialog. */
+export default function RootLayout({ children, modal }: LayoutProps<"/">) {
   return (
     // Browser extensions inject attributes on <html> before React hydrates.
     <html
@@ -37,7 +38,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${geistSans.variable} ${geistMono.variable} ${poppins.variable} h-full antialiased`}
       suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        {children}
+        {modal}
+      </body>
     </html>
   );
 }

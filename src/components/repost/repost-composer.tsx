@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useActionState } from "react";
 
 import { publishRepostAction, type FormState } from "@/app/actions";
@@ -14,14 +15,25 @@ import type { Author, Regret } from "@/types";
 export function RepostComposer({
   regret,
   author,
+  inDialog = false,
 }: {
   regret: Regret;
   author: Author;
+  /** Rendered over another page: closing must pop the intercepted URL. */
+  inDialog?: boolean;
 }) {
+  const router = useRouter();
   const [state, formAction, pending] = useActionState<FormState, FormData>(
     publishRepostAction,
     {},
   );
+
+  // Opening /republier/{id} directly bypasses the disabled pill on the card.
+  const blocked = !regret.allowRepost;
+
+  const closeClassName =
+    "absolute left-[15px] top-[10px] size-[35px] transition-opacity hover:opacity-80";
+  const closeIcon = <Image src="/icons/close.svg" alt="" width={35} height={35} unoptimized />;
 
   return (
     <form
@@ -30,17 +42,24 @@ export function RepostComposer({
     >
       <input type="hidden" name="regretId" value={regret.id} />
 
-      <Link
-        href="/"
-        aria-label="Fermer"
-        className="absolute left-[15px] top-[10px] size-[35px] transition-opacity hover:opacity-80"
-      >
-        <Image src="/icons/close.svg" alt="" width={35} height={35} unoptimized />
-      </Link>
+      {inDialog ? (
+        <button
+          type="button"
+          aria-label="Fermer"
+          onClick={() => router.back()}
+          className={closeClassName}
+        >
+          {closeIcon}
+        </button>
+      ) : (
+        <Link href="/" aria-label="Fermer" className={closeClassName}>
+          {closeIcon}
+        </Link>
+      )}
 
       <Button
         type="submit"
-        disabled={pending}
+        disabled={pending || blocked}
         className="absolute right-[17px] top-[17px] h-[35px] w-[104px] rounded-[10px] bg-white px-0 text-[15px] font-bold text-black hover:bg-white/90"
       >
         {pending ? "…" : "Republier"}
@@ -50,16 +69,24 @@ export function RepostComposer({
         <AuthorRow author={author} offset={25} />
       </div>
 
-      <textarea
-        name="comment"
-        placeholder="Ajouter un commentaire"
-        aria-label="Ajouter un commentaire"
-        className="bg-field-alt mx-auto mt-[14px] h-[118px] w-[calc(100%-48px)] max-w-[471px] shrink-0 resize-none rounded-[15px] px-[18px] py-[12px] text-[15px] text-white outline-none placeholder:text-white/35"
-      />
+      {regret.allowOpinionOnRepost ? (
+        <textarea
+          name="comment"
+          maxLength={500}
+          disabled={blocked}
+          placeholder="Ajouter un commentaire"
+          aria-label="Ajouter un commentaire"
+          className="bg-field-alt mx-auto mt-[14px] h-[118px] w-[calc(100%-48px)] max-w-[471px] shrink-0 resize-none rounded-[15px] px-[18px] py-[12px] text-[15px] text-white outline-none placeholder:text-white/35 disabled:opacity-40"
+        />
+      ) : (
+        <p className="text-muted mx-auto mt-[14px] w-[calc(100%-48px)] max-w-[471px] shrink-0 text-center text-[14px]">
+          L’auteur n’autorise pas les commentaires sur ce regret.
+        </p>
+      )}
 
-      {state.error ? (
+      {blocked || state.error ? (
         <p className="text-required shrink-0 px-6 pt-[10px] text-center text-[14px]">
-          {state.error}
+          {blocked ? "L’auteur a désactivé la republication de ce regret." : state.error}
         </p>
       ) : null}
 

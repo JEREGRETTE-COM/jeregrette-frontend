@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { cache } from "react";
 
 import { api, ApiError } from "@/lib/api";
+import { safeAvatar } from "@/lib/utils";
 import { getMe } from "@/lib/users";
 import type { ApiAuthUser, ApiUser, AuthTokens, RefreshResponse } from "@/types/api";
 import type { Author } from "@/types";
@@ -14,8 +15,9 @@ const REFRESH_MAX_AGE = 60 * 60 * 24 * 30;
 
 export function toAuthor(user: ApiUser): Author {
   return {
+    id: user.id,
     handle: `@${user.username}`,
-    avatar: user.avatar_url || null,
+    avatar: safeAvatar(user.avatar_url),
   };
 }
 
@@ -83,6 +85,10 @@ export async function clearSession() {
 
 export async function getAccessToken() {
   return (await cookies()).get(ACCESS_COOKIE)?.value;
+}
+
+export async function getRefreshToken() {
+  return (await cookies()).get(REFRESH_COOKIE)?.value;
 }
 
 export function refreshTokens(refreshToken: string) {

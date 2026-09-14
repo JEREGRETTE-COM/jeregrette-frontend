@@ -9,6 +9,7 @@ import type { ReactionType } from "@/types/api";
 export type ReactionId = ReactionType;
 
 export type Author = {
+  id: string;
   handle: string;
   /** null when the backend has no picture — the UI falls back to an initial. */
   avatar: string | null;
@@ -17,6 +18,9 @@ export type Author = {
 export type Regret = {
   id: string;
   author: Author;
+  authorId: string;
+  allowRepost: boolean;
+  allowOpinionOnRepost: boolean;
   time: string;
   text: string;
   /** Solid colour painted under the card's dark top-down overlay. */
@@ -29,6 +33,9 @@ export type Regret = {
 export type Repost = {
   id: string;
   author: Author;
+  authorId: string;
+  allowRepost: boolean;
+  allowOpinionOnRepost: boolean;
   time: string;
   comment: string;
   counts: Record<ReactionId, number>;
@@ -38,3 +45,14 @@ export type Repost = {
 };
 
 export type FeedItem = { kind: "regret"; regret: Regret } | { kind: "repost"; repost: Repost };
+
+/** A notification ready for display, built on the server. */
+export type NotificationView = {
+  id: string;
+  unread: boolean;
+  text: string;
+  /** "@handle" of whoever triggered it, when the payload says. */
+  actor: string | null;
+  href: string | null;
+  time: string;
+};

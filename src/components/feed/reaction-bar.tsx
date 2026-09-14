@@ -12,8 +12,11 @@ export function ReactionBar({
   itemId,
   counts,
   reacted,
+  hideCounts = false,
 }: {
   itemId: string;
+  /** Visitors cannot read the breakdown, so the chips show emojis only. */
+  hideCounts?: boolean;
 } & ReactionState) {
   const [state, addOptimistic] = useOptimistic<ReactionState, ReactionId>(
     { counts, reacted },
@@ -39,7 +42,10 @@ export function ReactionBar({
             name="reaction"
             value={reaction.id}
             aria-pressed={active}
-            className="flex h-[30px] min-w-0 flex-1 items-center justify-center gap-[3px] rounded-[25px] border-[0.5px] border-transparent px-1 sm:w-[62px] sm:flex-none sm:justify-start sm:gap-[4px] sm:pl-[7px]"
+            className={cn(
+              "flex h-[30px] min-w-0 flex-1 items-center justify-center gap-[3px] rounded-[25px] border-[0.5px] border-transparent px-1 sm:w-[62px] sm:flex-none sm:justify-start sm:gap-[4px] sm:pl-[7px]",
+              hideCounts && "sm:justify-center sm:pl-1",
+            )}
             style={
               active
                 ? { backgroundColor: reaction.color, borderColor: "#ffffff" }
@@ -47,14 +53,16 @@ export function ReactionBar({
             }
           >
             <span className="text-[17px] leading-none sm:text-[20px]">{reaction.emoji}</span>
-            <span
-              className={cn(
-                "text-[12px] leading-none sm:text-[14px]",
-                active ? "font-semibold text-white" : "text-[#afafaf]",
-              )}
-            >
-              {state.counts[reaction.id]}
-            </span>
+            {hideCounts ? null : (
+              <span
+                className={cn(
+                  "text-[12px] leading-none sm:text-[14px]",
+                  active ? "font-semibold text-white" : "text-[#afafaf]",
+                )}
+              >
+                {state.counts[reaction.id]}
+              </span>
+            )}
           </button>
         );
       })}

@@ -32,7 +32,9 @@ export function SignupCard() {
           id="email"
           name="email"
           type="email"
-          label="Adresse Email"
+          maxLength={255}
+          required={false}
+          label="Adresse email (facultatif)"
           autoComplete="email"
           className="mt-[11px]"
         />

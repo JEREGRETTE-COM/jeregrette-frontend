@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import { AccountMenu } from "@/components/menu/account-menu";
 import { getCurrentAuthor } from "@/lib/auth";
+import { loadUnreadCount } from "@/lib/notifications";
 import { cn } from "@/lib/utils";
 
 /**
@@ -10,7 +11,8 @@ import { cn } from "@/lib/utils";
  * bottom of a 110px bar; below sm the bar shrinks and simply centres it.
  */
 export async function AppHeader() {
-  const author = await getCurrentAuthor();
+  // independent reads, so they share one round trip
+  const [author, unreadCount] = await Promise.all([getCurrentAuthor(), loadUnreadCount()]);
 
   return (
     <header className="sticky top-0 z-30 w-full bg-[rgba(22,22,22,0.75)] backdrop-blur-[25px]">
@@ -42,7 +44,7 @@ export async function AppHeader() {
               {author.handle}
             </span>
             {/* Signing out now lives inside the menu, as in Figma 131:968. */}
-            <AccountMenu author={author} />
+            <AccountMenu author={author} unreadCount={unreadCount} />
           </div>
         ) : (
           <div className="flex shrink-0 items-center gap-[10px] sm:gap-[14px]">
