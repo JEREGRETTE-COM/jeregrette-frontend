@@ -9,6 +9,7 @@ import {
   getAccessToken,
   getCurrentUser,
   getRefreshToken,
+  safeNext,
   saveSession,
 } from "@/lib/auth";
 import {
@@ -84,7 +85,7 @@ export async function signUpAction(
 
   await saveSession(auth.tokens);
   revalidatePath("/", "layout");
-  redirect("/");
+  redirect(safeNext(String(formData.get("next") ?? "")));
 }
 
 export async function signInAction(
@@ -119,7 +120,7 @@ export async function signInAction(
 
   await saveSession(auth.tokens);
   revalidatePath("/", "layout");
-  redirect("/");
+  redirect(safeNext(String(formData.get("next") ?? "")));
 }
 
 export async function signOutAction() {

@@ -1,4 +1,5 @@
 import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 import { cache } from "react";
 
 import { api, ApiError } from "@/lib/api";
@@ -122,4 +123,18 @@ export const getCurrentUser = cache(async (): Promise<ApiAuthUser | null> => {
 export async function getCurrentAuthor(): Promise<Author | null> {
   const user = await getCurrentUser();
   return user ? toAuthor(user) : null;
+}
+
+/** Guards against an open redirect: only a same-origin, relative path is kept. */
+export function safeNext(value: string | undefined): string {
+  if (value && value.startsWith("/") && !value.startsWith("//") && !value.includes("..")) {
+    return value;
+  }
+  return "/";
+}
+
+export async function requireAuthor(next: string): Promise<Author> {
+  const author = await getCurrentAuthor();
+  if (!author) redirect(`/inscription?next=${encodeURIComponent(next)}`);
+  return author;
 }

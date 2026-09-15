@@ -8,7 +8,7 @@ import { AuthCard } from "@/components/auth/auth-card";
 import { AuthField } from "@/components/auth/auth-field";
 import { Button } from "@/components/ui/button";
 
-export function SignupCard() {
+export function SignupCard({ next = "/" }: { next?: string }) {
   const [state, formAction, pending] = useActionState<FormState, FormData>(
     signUpAction,
     {},
@@ -17,6 +17,7 @@ export function SignupCard() {
   return (
     <AuthCard title="Bienvenue sur" highlight="jeregrette.com">
       <form action={formAction} className="flex flex-1 flex-col">
+        {next !== "/" ? <input type="hidden" name="next" value={next} /> : null}
         <AuthField
           id="username"
           name="username"
@@ -59,7 +60,10 @@ export function SignupCard() {
 
         <p className="mt-[18px] shrink-0 text-[14px] font-light leading-none text-white">
           Vous êtes déja regretteur(euse) ?{" "}
-          <Link href="/connexion" className="font-semibold underline">
+          <Link
+            href={next !== "/" ? `/connexion?next=${encodeURIComponent(next)}` : "/connexion"}
+            className="font-semibold underline"
+          >
             Se connecter
           </Link>
         </p>
