@@ -11,7 +11,7 @@ export default function LegalLayout({
       <header className="sticky top-0 z-30 h-[70px] w-full bg-[rgba(22,22,22,0.75)] backdrop-blur-[25px]">
         <div className="mx-auto flex h-full w-full max-w-[720px] items-center gap-[16px] px-[25px]">
           <Link
-            href="/"
+            href="/inscription"
             aria-label="Retour"
             className="size-[35px] shrink-0 transition-opacity hover:opacity-80"
           >
