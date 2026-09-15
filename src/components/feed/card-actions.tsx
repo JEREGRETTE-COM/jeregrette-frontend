@@ -5,7 +5,8 @@ import { ReactionBar } from "@/components/feed/reaction-bar";
 import type { ReactionId } from "@/types";
 
 /**
- * Figma 85:875 — 55px bar: reactions on the left, repost on the right. Sharing
+ * Figma 214:1038 — 55px bar: reactions on the left, repost on the right, both
+ * translucent white (20%) so the card colour shows through. Sharing
  * moved into the card's top-right menu (Figma 127:736). Laid out as a flex row
  * so it survives a 360px screen.
  */
@@ -28,7 +29,7 @@ export function CardActions({
   hideCounts?: boolean;
 }) {
   const pillClassName =
-    "bg-surface ml-auto flex h-[34px] w-[54px] shrink-0 items-center justify-center gap-[5px] rounded-[20px] sm:w-[66px] sm:justify-start sm:gap-[7px] sm:pl-[11px]";
+    "ml-auto flex h-[34px] w-[54px] shrink-0 items-center justify-center gap-[5px] rounded-[20px] bg-white/20 sm:w-[66px] sm:justify-start sm:gap-[7px] sm:pl-[11px]";
   const pillContent = (
     <>
       <Image
@@ -39,7 +40,7 @@ export function CardActions({
         unoptimized
         className="h-[21.5px] w-[19.5px]"
       />
-      <span className="text-[12px] leading-none text-[#afafaf] sm:text-[14px]">{reposts}</span>
+      <span className="text-[12px] leading-none text-white sm:text-[14px]">{reposts}</span>
     </>
   );
 

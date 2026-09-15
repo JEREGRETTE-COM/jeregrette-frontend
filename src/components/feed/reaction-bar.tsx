@@ -7,7 +7,10 @@ import { applyReaction, reactions, type ReactionState } from "@/lib/reactions";
 import { cn } from "@/lib/utils";
 import type { ReactionId } from "@/types";
 
-/** Figma 85:876 — the reaction pill. Fixed at 314px once there is room. */
+/**
+ * Figma 214:1040 — the reaction pill, translucent white over the card colour.
+ * Fixed at 314px once there is room.
+ */
 export function ReactionBar({
   itemId,
   counts,
@@ -29,7 +32,7 @@ export function ReactionBar({
         addOptimistic(String(formData.get("reaction")) as ReactionId);
         return toggleReactionAction(formData);
       }}
-      className="bg-surface flex h-[34px] min-w-0 flex-1 items-center rounded-[20px] p-[2px] sm:w-[314px] sm:flex-none"
+      className="flex h-[34px] min-w-0 flex-1 items-center rounded-[20px] bg-white/20 p-[2px] sm:w-[314px] sm:flex-none"
     >
       <input type="hidden" name="itemId" value={itemId} />
       <input type="hidden" name="current" value={state.reacted ?? ""} />
@@ -57,7 +60,7 @@ export function ReactionBar({
               <span
                 className={cn(
                   "text-[12px] leading-none sm:text-[14px]",
-                  active ? "font-semibold text-white" : "text-[#afafaf]",
+                  active ? "font-semibold text-white" : "text-white",
                 )}
               >
                 {state.counts[reaction.id]}
