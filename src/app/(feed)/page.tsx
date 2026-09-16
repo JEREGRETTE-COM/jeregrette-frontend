@@ -1,11 +1,12 @@
 import Link from "next/link";
 
 import { BackToTop } from "@/components/feed/back-to-top";
+import { FeedOutage } from "@/components/feed/feed-outage";
 import { LoadMore } from "@/components/feed/load-more";
 import { RegretCard } from "@/components/feed/regret-card";
 import { RepostCard } from "@/components/feed/repost-card";
 import { getCurrentUser } from "@/lib/auth";
-import { loadFeedPage, loadPublicFeed } from "@/lib/feed";
+import { loadFeed, loadPublicFeed } from "@/lib/feed";
 import type { FeedItem } from "@/types";
 
 export const dynamic = "force-dynamic";
@@ -69,9 +70,15 @@ const columnClassName =
 
 export default async function HomePage() {
   // both read the session cookie; getCurrentUser is cached for this render
-  const [page, viewer] = await Promise.all([loadFeedPage(), getCurrentUser()]);
+  const [state, viewer] = await Promise.all([
+    loadFeed(),
+    // the outage screen below covers a failing API, so this must not throw
+    getCurrentUser().catch(() => null),
+  ]);
 
-  if (!page) {
+  if (state.kind === "outage") return <FeedOutage />;
+
+  if (state.kind === "anonymous") {
     const items = await loadPublicFeed();
     return (
       <>
@@ -92,6 +99,8 @@ export default async function HomePage() {
       </>
     );
   }
+
+  const page = state.page;
 
   if (page.items.length === 0) {
     return (

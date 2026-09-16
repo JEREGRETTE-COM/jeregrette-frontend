@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 
 import { AccountMenu } from "@/components/menu/account-menu";
-import { getCurrentAuthor } from "@/lib/auth";
+import { getAccessToken, getCurrentAuthor } from "@/lib/auth";
 import { loadUnreadCount } from "@/lib/notifications";
 
 /**
@@ -47,7 +47,15 @@ export function AppHeader() {
 
 async function HeaderSession() {
   // independent reads, so they share one round trip
-  const [author, unreadCount] = await Promise.all([getCurrentAuthor(), loadUnreadCount()]);
+  const [token, author, unreadCount] = await Promise.all([
+    getAccessToken(),
+    // A failing API must not throw here: the page below says there is an outage.
+    getCurrentAuthor().catch(() => null),
+    loadUnreadCount(),
+  ]);
+
+  // Signed in but the API is down: showing "Se connecter" would be a lie.
+  if (!author && token) return null;
 
   if (author) {
     return (

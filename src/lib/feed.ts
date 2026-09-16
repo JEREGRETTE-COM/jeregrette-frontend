@@ -1,3 +1,4 @@
+import { ApiError } from "@/lib/api";
 import { getAccessToken } from "@/lib/auth";
 import { toFeedItem } from "@/lib/feed-mapping";
 import {
@@ -79,11 +80,39 @@ export async function loadPublicFeed(): Promise<FeedItem[]> {
   }
 }
 
-/** The first screen of the feed: one page of the API, one round trip. */
-export async function loadFeedPage(): Promise<FeedPage | null> {
-  const token = await getAccessToken();
-  if (!token) return null;
+/**
+ * What the home page has to show. `outage` is the backend being down rather
+ * than the reader being signed out, so the screen can say so and retry.
+ */
+export type FeedState =
+  | { kind: "anonymous" }
+  | { kind: "ready"; page: FeedPage }
+  | { kind: "outage" };
 
+/** A failure that is the server's, not the request's: retrying can fix it. */
+function isOutage(error: unknown) {
+  return (
+    error instanceof ApiError &&
+    (error.status === 0 || error.status === 429 || error.status >= 500)
+  );
+}
+
+/** The first screen of the feed: one page of the API, one round trip. */
+export async function loadFeed(): Promise<FeedState> {
+  const token = await getAccessToken();
+  if (!token) return { kind: "anonymous" };
+
+  try {
+    return { kind: "ready", page: await loadFeedPage(token) };
+  } catch (error) {
+    // An expired session reads as signed out; the proxy renews it on the next hit.
+    if (error instanceof ApiError && error.isUnauthenticated) return { kind: "anonymous" };
+    if (isOutage(error)) return { kind: "outage" };
+    throw error;
+  }
+}
+
+async function loadFeedPage(token: string): Promise<FeedPage> {
   const { data, meta } = await listPosts({ token, limit: PAGE_SIZE });
   const hasMore = Boolean(meta?.has_more);
 
