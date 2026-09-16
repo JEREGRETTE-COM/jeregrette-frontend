@@ -18,6 +18,7 @@ export function CardActions({
   repostHref,
   canRepost,
   hideCounts = false,
+  countsKnown = true,
 }: {
   itemId: string;
   counts: Record<ReactionId, number>;
@@ -27,6 +28,8 @@ export function CardActions({
   /** The author's `allow_repost`; the backend refuses reposts when it is off. */
   canRepost: boolean;
   hideCounts?: boolean;
+  /** false while this card's counts have not been fetched yet. */
+  countsKnown?: boolean;
 }) {
   const pillClassName =
     "ml-auto flex h-[34px] w-[54px] shrink-0 items-center justify-center gap-[5px] rounded-[20px] bg-white/20 sm:w-[66px] sm:justify-start sm:gap-[7px] sm:pl-[11px]";
@@ -46,7 +49,13 @@ export function CardActions({
 
   return (
     <div className="absolute inset-x-0 bottom-0 flex h-[55px] items-center gap-[8px] px-[12px] sm:px-[9px] sm:pl-[12px]">
-      <ReactionBar itemId={itemId} counts={counts} reacted={reacted} hideCounts={hideCounts} />
+      <ReactionBar
+        itemId={itemId}
+        counts={counts}
+        reacted={reacted}
+        hideCounts={hideCounts}
+        countsKnown={countsKnown}
+      />
 
       {/* ml-auto pins the repost pill to the right edge once the reactions stop growing */}
       {canRepost ? (

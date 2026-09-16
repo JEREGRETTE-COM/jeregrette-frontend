@@ -17,7 +17,13 @@ import type { ApiPost, PostCursor } from "@/types/api";
  */
 const PAGE_SIZE = 50;
 /** Parallel breakdown requests in flight. Enough to be quick, not a flood. */
-const BREAKDOWN_CONCURRENCY = 8;
+const BREAKDOWN_CONCURRENCY = 6;
+/**
+ * How many cards get their counts before the page is sent. One call per post is
+ * needed, the API allows 30 a minute, and a page holds 50 posts: the rest are
+ * fetched by the cards themselves as they scroll into view.
+ */
+const EAGER_BREAKDOWNS = 6;
 
 export type FeedPage = {
   items: FeedItem[];
@@ -55,7 +61,7 @@ async function loadBreakdowns(ids: string[], token: string) {
 /** Turns raw posts into feed items, fetching only the breakdowns that matter. */
 export async function toFeedItems(posts: ApiPost[], token: string) {
   const withReactions = new Set<string>();
-  for (const post of posts) {
+  for (const post of posts.slice(0, EAGER_BREAKDOWNS)) {
     if (post.reactions_count > 0) withReactions.add(post.id);
 
     const quoted = post.original_post as ApiPost | undefined;

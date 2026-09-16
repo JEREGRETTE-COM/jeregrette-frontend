@@ -55,6 +55,7 @@ export function RepostCard({
       <CardActions
         itemId={repost.id}
         counts={repost.counts}
+        countsKnown={repost.countsKnown}
         reacted={repost.reacted}
         reposts={repost.reposts}
         repostHref={`/republier/${repost.regret.id}`}

@@ -54,6 +54,7 @@ export function toRegret(post: ApiPost, breakdown?: ReactionBreakdown): Regret {
     text: post.content,
     background: backgroundFor(post.id),
     counts: countsFrom(breakdown),
+    countsKnown: breakdown !== undefined || post.reactions_count === 0,
     reacted: post.my_reaction ?? undefined,
     reposts: post.reposts_count,
   };
@@ -81,6 +82,7 @@ export function toFeedItem(
         time: relativeTime(post.created_at),
         comment: post.content,
         counts: countsFrom(breakdowns.get(post.id)),
+        countsKnown: breakdowns.get(post.id) !== undefined || post.reactions_count === 0,
         reacted: post.my_reaction ?? undefined,
         reposts: post.reposts_count,
         regret: toRegret(quoted, breakdowns.get(quoted.id)),

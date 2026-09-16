@@ -15,6 +15,7 @@ import {
 import {
   createPost,
   deletePost,
+  getReactionBreakdown,
   MAX_CONTENT,
   removeReaction,
   repost,
@@ -196,6 +197,33 @@ export async function publishRepostAction(
 }
 
 const REACTION_IDS = new Set<string>(reactions.map((reaction) => reaction.id));
+
+/** One API call per post, so a batch stays small on purpose. */
+const MAX_COUNT_IDS = 6;
+
+/**
+ * Counts for cards the reader scrolled to. The feed preloads only its first
+ * cards: one call per post would otherwise blow the API's 30-a-minute limit.
+ */
+export async function loadReactionCountsAction(ids: string[]) {
+  const token = await getAccessToken();
+  if (!token) return {};
+
+  const wanted = ids.filter((id) => typeof id === "string" && id).slice(0, MAX_COUNT_IDS);
+  const entries = await Promise.all(
+    wanted.map(async (id) => {
+      try {
+        const { breakdown } = await getReactionBreakdown(id, token);
+        return [id, breakdown] as const;
+      } catch {
+        // A refused count leaves the chips without numbers, nothing worse.
+        return null;
+      }
+    }),
+  );
+
+  return Object.fromEntries(entries.filter((entry) => entry !== null));
+}
 
 export async function toggleReactionAction(formData: FormData) {
   const token = await getAccessToken();

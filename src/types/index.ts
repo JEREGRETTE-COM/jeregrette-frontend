@@ -26,6 +26,8 @@ export type Regret = {
   /** Solid colour painted under the card's dark top-down overlay. */
   background: string;
   counts: Record<ReactionId, number>;
+  /** false while the per-reaction counts have not been fetched yet. */
+  countsKnown: boolean;
   reacted?: ReactionId;
   reposts: number;
 };
@@ -39,6 +41,8 @@ export type Repost = {
   time: string;
   comment: string;
   counts: Record<ReactionId, number>;
+  /** false while the per-reaction counts have not been fetched yet. */
+  countsKnown: boolean;
   reacted?: ReactionId;
   reposts: number;
   regret: Regret;

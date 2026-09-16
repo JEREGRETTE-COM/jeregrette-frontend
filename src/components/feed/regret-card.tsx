@@ -27,6 +27,7 @@ export function RegretCard({
       <CardActions
         itemId={regret.id}
         counts={regret.counts}
+        countsKnown={regret.countsKnown}
         reacted={regret.reacted}
         reposts={regret.reposts}
         repostHref={`/republier/${regret.id}`}
