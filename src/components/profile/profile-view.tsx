@@ -28,6 +28,8 @@ export function ProfileView({
   loaded?: { count: number; hasMore: boolean };
 }) {
   const handle = `@${user.username}`;
+  // Flip AVATAR_UPLOAD to "1" the day POST /users/me/avatar is deployed.
+  const canUploadPhoto = process.env.AVATAR_UPLOAD === "1";
   // The API does not serialise posts_count today, so the loaded page stands in:
   // "20+" while more pages exist, rather than no number at all.
   const total = user.posts_count ?? loaded?.count;
@@ -52,7 +54,7 @@ export function ProfileView({
           </Link>
           <p className="text-[16px] text-white">Profil</p>
           {/* Figma 167:994 — the pencil only exists on your own profile */}
-          {own ? <EditProfileButton profile={profile} /> : null}
+          {own ? <EditProfileButton profile={profile} canUploadPhoto={canUploadPhoto} /> : null}
         </div>
       </header>
 
@@ -97,7 +99,11 @@ export function ProfileView({
           </p>
         ) : own ? (
           <div className="mt-[12px] flex justify-center">
-            <EditProfileButton profile={profile} variant="text" />
+            <EditProfileButton
+              profile={profile}
+              variant="text"
+              canUploadPhoto={canUploadPhoto}
+            />
           </div>
         ) : null}
 
