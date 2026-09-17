@@ -18,13 +18,20 @@ export function ProfileView({
   items,
   viewerId,
   own,
+  loaded,
 }: {
   user: ApiAuthUser;
   items: FeedItem[];
   viewerId: string;
   own: boolean;
+  /** What the posts list returned, used when the API omits `posts_count`. */
+  loaded?: { count: number; hasMore: boolean };
 }) {
   const handle = `@${user.username}`;
+  // The API does not serialise posts_count today, so the loaded page stands in:
+  // "20+" while more pages exist, rather than no number at all.
+  const total = user.posts_count ?? loaded?.count;
+  const approximate = user.posts_count === undefined && Boolean(loaded?.hasMore);
   const profile = {
     username: user.username,
     bio: user.bio ?? "",
@@ -72,12 +79,14 @@ export function ProfileView({
           {handle}
         </p>
 
-        {/* posts_count is optional in the spec: no number beats a wrong one */}
-        {user.posts_count !== undefined ? (
+        {total !== undefined ? (
           <div className="mt-[10px] flex justify-center">
             <div className="flex flex-col items-center leading-[1.2] text-white">
-              <span className="text-[16px] font-bold">{user.posts_count}</span>
-              <span className="text-[14px]">{user.posts_count > 1 ? "regrets" : "regret"}</span>
+              <span className="text-[16px] font-bold">
+                {total}
+                {approximate ? "+" : ""}
+              </span>
+              <span className="text-[14px]">{total > 1 ? "regrets" : "regret"}</span>
             </div>
           </div>
         ) : null}

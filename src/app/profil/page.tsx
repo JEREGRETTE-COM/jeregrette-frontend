@@ -31,10 +31,19 @@ export default async function ProfilePage() {
     console.info("[diag profil] GET /users/me/posts", {
       count: myPosts.posts.length,
       hasMore: myPosts.hasMore,
+      posts_count: user.posts_count,
       latest: myPosts.posts.slice(0, 3).map((post) => ({ id: post.id, created_at: post.created_at })),
     });
   }
 
   const items = await toFeedItems(myPosts.posts, token);
-  return <ProfileView user={user} items={items} viewerId={user.id} own />;
+  return (
+    <ProfileView
+      user={user}
+      items={items}
+      viewerId={user.id}
+      own
+      loaded={{ count: myPosts.posts.length, hasMore: myPosts.hasMore }}
+    />
+  );
 }

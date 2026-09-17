@@ -49,6 +49,26 @@ export type ProfileUpdate = {
   avatar_url?: string | null;
 };
 
+/** Formats the backend accepts, and the ceiling we refuse before sending. */
+export const AVATAR_TYPES = ["image/jpeg", "image/png", "image/webp"];
+export const MAX_AVATAR_BYTES = 5 * 1024 * 1024;
+
+/**
+ * POST /users/me/avatar — multipart, field `avatar`. The backend stores the
+ * file and answers with the updated user, `avatar_url` included.
+ */
+export async function uploadAvatar(file: File, token: string) {
+  const form = new FormData();
+  form.set("avatar", file);
+
+  const { data } = await api<ApiItem<ApiAuthUser>>("/users/me/avatar", {
+    method: "POST",
+    body: form,
+    token,
+  });
+  return data;
+}
+
 export async function updateMe(update: ProfileUpdate, token: string) {
   const { data } = await api<ApiItem<ApiAuthUser>>("/users/me", {
     method: "PATCH",

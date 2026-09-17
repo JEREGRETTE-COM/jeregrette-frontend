@@ -26,7 +26,14 @@ import {
 import { loadMoreFeed } from "@/lib/feed";
 import { markAllNotificationsRead, markNotificationRead } from "@/lib/notifications";
 import { reactions } from "@/lib/reactions";
-import { MAX_BIO, updateMe, type ProfileUpdate } from "@/lib/users";
+import {
+  AVATAR_TYPES,
+  MAX_AVATAR_BYTES,
+  MAX_BIO,
+  updateMe,
+  uploadAvatar,
+  type ProfileUpdate,
+} from "@/lib/users";
 import { isHttpsUrl } from "@/lib/utils";
 import type { AuthResponse, PostCursor, ReactionType } from "@/types/api";
 
@@ -293,6 +300,40 @@ export async function deletePostAction(postId: string) {
   revalidatePath("/");
   revalidatePath("/profil");
   return {};
+}
+
+/**
+ * Sends the picked photo to the backend, which stores it and hands back its
+ * URL. The browser has already cropped and shrunk it.
+ */
+export async function uploadAvatarAction(
+  formData: FormData,
+): Promise<{ url?: string; error?: string }> {
+  const token = await getAccessToken();
+  if (!token) return { error: "Session expirée, reconnecte-toi." };
+
+  const file = formData.get("avatar");
+  if (!(file instanceof File) || file.size === 0) return { error: "Choisis une image." };
+  if (!AVATAR_TYPES.includes(file.type)) {
+    return { error: "Formats acceptés : JPG, PNG ou WebP." };
+  }
+  if (file.size > MAX_AVATAR_BYTES) return { error: "Image trop lourde : 5 Mo maximum." };
+
+  try {
+    const user = await uploadAvatar(file, token);
+    revalidatePath("/", "layout");
+    return { url: user.avatar_url ?? undefined };
+  } catch (error) {
+    if (error instanceof ApiError) {
+      // The route is agreed but not deployed yet.
+      if (error.status === 404 || error.status === 405) {
+        return { error: "L’envoi de photo n’est pas encore prêt côté serveur." };
+      }
+      if (error.isUnauthenticated) return { error: "Session expirée, reconnecte-toi." };
+      return { error: error.displayMessage };
+    }
+    throw error;
+  }
 }
 
 export async function updateProfileAction(formData: FormData): Promise<FormState> {

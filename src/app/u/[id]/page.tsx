@@ -47,5 +47,13 @@ export default async function UserProfilePage({
   if (!user) notFound();
 
   const items = await toFeedItems(theirPosts.posts, token);
-  return <ProfileView user={user} items={items} viewerId={viewer.id} own={false} />;
+  return (
+    <ProfileView
+      user={user}
+      items={items}
+      viewerId={viewer.id}
+      own={false}
+      loaded={{ count: theirPosts.posts.length, hasMore: theirPosts.hasMore }}
+    />
+  );
 }

@@ -65,6 +65,7 @@ export class ApiError extends Error {
 
 type RequestOptions = {
   method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
+  /** JSON by default; a FormData goes out as multipart, for file uploads. */
   body?: unknown;
   /** Sanctum personal access token. */
   token?: string;
@@ -78,7 +79,10 @@ export async function api<T>(path: string, options: RequestOptions = {}): Promis
   const { method = "GET", body, token } = options;
 
   const headers: Record<string, string> = { Accept: "application/json" };
-  if (body !== undefined) headers["Content-Type"] = "application/json";
+  // fetch sets its own multipart boundary, so never force the type on FormData.
+  if (body !== undefined && !(body instanceof FormData)) {
+    headers["Content-Type"] = "application/json";
+  }
   if (token) headers.Authorization = `Bearer ${token}`;
 
   const url = `${BASE_URL}${path.startsWith("/") ? path : `/${path}`}`;
@@ -100,7 +104,12 @@ export async function api<T>(path: string, options: RequestOptions = {}): Promis
     response = await fetch(url, {
       method,
       headers,
-      body: body === undefined ? undefined : JSON.stringify(body),
+      body:
+        body === undefined
+          ? undefined
+          : body instanceof FormData
+            ? body
+            : JSON.stringify(body),
     });
   } catch (cause) {
     // Server-side log only; never the headers (bearer token) nor the body.

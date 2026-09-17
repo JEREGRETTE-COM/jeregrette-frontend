@@ -19,6 +19,14 @@ export default async function NotificationsPage() {
   if (!token) redirect("/connexion");
 
   const result = await listNotifications(token).catch(() => null);
+
+  // TEMP diagnostic (dev only): the payload shape is undocumented.
+  if (process.env.NODE_ENV !== "production") {
+    for (const notification of (result?.data ?? []).slice(0, 3)) {
+      console.info("[diag notif]", notification.type, notification.data);
+    }
+  }
+
   const items = (result?.data ?? []).map(toNotificationView);
   const unread = result?.meta?.unread_count ?? items.filter((item) => item.unread).length;
 

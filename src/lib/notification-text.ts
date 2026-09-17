@@ -54,7 +54,16 @@ export function toNotificationView(notification: ApiNotification): NotificationV
     "from",
   ]);
   const actor = rawActor ? (rawActor.startsWith("@") ? rawActor : `@${rawActor}`) : null;
-  const postId = first(payload, ["post_id", "post.id", "regret_id", "original_post_id"]);
+  // A repost notification carries both ids: the repost is what the reader wants
+  // to see, since it holds the comment and quotes the regret underneath.
+  const postId = first(payload, [
+    "repost_id",
+    "repost.id",
+    "post_id",
+    "post.id",
+    "regret_id",
+    "original_post_id",
+  ]);
   const phrase = phraseFor(notification.type);
 
   return {
