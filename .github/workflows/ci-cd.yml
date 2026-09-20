@@ -2,7 +2,7 @@ name: Docker Build and Push Server
 
 on:
   push:
-    branches: [ develop ]
+    branches: [ ci-cd ]
 
 jobs:
   build-and-push:
