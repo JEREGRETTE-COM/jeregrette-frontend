@@ -45,7 +45,8 @@ function JoinPrompt() {
     <div className="bg-row flex flex-col items-center gap-[12px] rounded-[25px] px-[20px] py-[22px] text-center">
       <p className="text-[17px] font-semibold text-white">Rejoins les regretteurs</p>
       <p className="text-muted max-w-[380px] text-[14px]">
-        Crée un compte pour réagir, republier et voir tout le fil.
+        Réagis et publie tout de suite. Crée un compte pour garder tes regrets et
+        voir tout le fil.
       </p>
       <div className="flex flex-wrap justify-center gap-[10px]">
         <Link
@@ -90,7 +91,7 @@ export default async function HomePage() {
             </p>
           ) : (
             <>
-              <FeedCards items={items} hideCounts />
+              <FeedCards items={items} />
               <JoinPrompt />
             </>
           )}

@@ -60,12 +60,16 @@ async function loadBreakdowns(ids: string[], token: string) {
 
 /** Turns raw posts into feed items, fetching only the breakdowns that matter. */
 export async function toFeedItems(posts: ApiPost[], token: string) {
+  // Posts that carry their own `reactions` need nothing; this covers the rest.
+  const needsCall = (post: ApiPost | undefined) =>
+    Boolean(post?.id) && !post?.reactions && (post?.reactions_count ?? 0) > 0;
+
   const withReactions = new Set<string>();
   for (const post of posts.slice(0, EAGER_BREAKDOWNS)) {
-    if (post.reactions_count > 0) withReactions.add(post.id);
+    if (needsCall(post)) withReactions.add(post.id);
 
     const quoted = post.original_post as ApiPost | undefined;
-    if (quoted?.id && quoted.reactions_count > 0) withReactions.add(quoted.id);
+    if (needsCall(quoted)) withReactions.add(quoted!.id);
   }
 
   const breakdowns = await loadBreakdowns([...withReactions], token);
@@ -121,15 +125,6 @@ export async function loadFeed(): Promise<FeedState> {
 async function loadFeedPage(token: string): Promise<FeedPage> {
   const { data, meta } = await listPosts({ token, limit: PAGE_SIZE });
   const hasMore = Boolean(meta?.has_more);
-
-  // TEMP diagnostic (dev only): the new server hands back an empty feed.
-  if (process.env.NODE_ENV !== "production") {
-    console.info("[diag feed] GET /posts", {
-      count: data?.length ?? 0,
-      meta,
-      firstIds: (data ?? []).slice(0, 3).map((post) => post.id),
-    });
-  }
 
   return {
     items: await toFeedItems(data ?? [], token),

@@ -21,12 +21,16 @@ export async function listPosts({
   token,
   cursor,
   limit,
+  rubriqueId,
 }: {
   token: string;
   cursor?: PostCursor;
   limit?: number;
+  /** Narrows the feed to one section, per the `rubrique_id` query parameter. */
+  rubriqueId?: string;
 }) {
   const query = new URLSearchParams();
+  if (rubriqueId) query.set("rubrique_id", rubriqueId);
   for (const [key, value] of Object.entries(cursor ?? {})) {
     if (value !== null && value !== undefined) query.set(key, String(value));
   }

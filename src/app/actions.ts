@@ -7,6 +7,7 @@ import { api, ApiError } from "@/lib/api";
 import {
   clearSession,
   getAccessToken,
+  ensureSession,
   getCurrentUser,
   getRefreshToken,
   safeNext,
@@ -151,8 +152,10 @@ export async function publishRegretAction(
   _state: FormState,
   formData: FormData,
 ): Promise<FormState> {
-  const token = await getAccessToken();
-  if (!token) redirect("/inscription");
+  const token = await ensureSession().catch(() => null);
+  if (!token) {
+    return { error: "Impossible d’ouvrir une session invitée. Crée un compte pour publier." };
+  }
 
   const text = String(formData.get("regret") ?? "").trim();
   if (!text) return { error: "Écris ton regret avant de publier." };
@@ -176,8 +179,10 @@ export async function publishRepostAction(
   _state: FormState,
   formData: FormData,
 ): Promise<FormState> {
-  const token = await getAccessToken();
-  if (!token) redirect("/inscription");
+  const token = await ensureSession().catch(() => null);
+  if (!token) {
+    return { error: "Impossible d’ouvrir une session invitée. Crée un compte pour republier." };
+  }
 
   const postId = String(formData.get("regretId") ?? "");
   const comment = String(formData.get("comment") ?? "").trim();
@@ -233,7 +238,10 @@ export async function loadReactionCountsAction(ids: string[]) {
 }
 
 export async function toggleReactionAction(formData: FormData) {
-  const token = await getAccessToken();
+  // A visitor reacting for the first time becomes a guest, rather than being
+  // bounced to a sign-up form. Guest accounts are rate limited, so signing up
+  // stays the fallback when the API refuses to mint one.
+  const token = await ensureSession().catch(() => null);
   if (!token) redirect("/inscription");
 
   const postId = String(formData.get("itemId") ?? "");

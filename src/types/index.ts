@@ -11,6 +11,10 @@ export type ReactionId = ReactionType;
 export type Author = {
   id: string;
   handle: string;
+  /** Verified badge from the API's `certified`. */
+  certified: boolean;
+  /** Account created by POST /auth/guest: no email, no password. */
+  guest: boolean;
   /** null when the backend has no picture — the UI falls back to an initial. */
   avatar: string | null;
 };

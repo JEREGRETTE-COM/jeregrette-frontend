@@ -9,7 +9,12 @@ export type AuthProvider = "EMAIL" | (string & {});
  */
 export type ApiUser = {
   id: string;
-  username: string;
+  /** null on a guest account, until they choose one. */
+  username: string | null;
+  /** Verified badge, shown next to the handle. */
+  certified?: boolean;
+  /** Accounts created without signing up. */
+  is_guest?: boolean;
   email?: string | null;
   avatar_url: string | null;
   bio: string | null;
@@ -48,6 +53,23 @@ export type PostType = "ORIGINAL" | "REPOST";
 /** The values POST reactions accepts, and what `my_reaction` holds. */
 export type ReactionType = "LIKE" | "EMPATHY" | "SUPPORT" | "LAUGH" | "SAD";
 
+/** Counts per reaction type, as served inside each post. */
+export type ApiReactions = {
+  total: number;
+  breakdown: Record<string, number | string>;
+};
+
+/** Section a post belongs to. Null on posts published before rubriques. */
+export type ApiRubrique = {
+  id: string;
+  title: string;
+  slug: string;
+  description: string | null;
+  position: number;
+  posts_count: number;
+  created_at: string | null;
+};
+
 /**
  * A post. `type` distinguishes originals from reposts.
  *
@@ -63,8 +85,12 @@ export type ApiPost = {
   author_id: string;
   allow_repost: boolean;
   allow_opinion_on_repost: boolean;
-  /** A single total — the API exposes no per-reaction breakdown. */
+  /** Kept for older payloads; `reactions` carries the same total and the detail. */
   reactions_count: number;
+  /** Counts per type, straight in the post: no second call needed. */
+  reactions?: ApiReactions;
+  rubrique_id?: string | null;
+  rubrique?: ApiRubrique | null;
   reposts_count: number;
   score: number;
   /** The current user's reaction, null when they have not reacted. */
