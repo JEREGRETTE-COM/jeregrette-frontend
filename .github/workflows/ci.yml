@@ -24,11 +24,3 @@ jobs:
           tags: |
             benrango/jeregrette:${{github.sha}}
             benrango/jeregrette:latest
-
-  deploy:
-    runs-on: ubuntu-latest
-    needs: build-and-push
-    steps:         
-      - name: Trigger Portainer Webhook
-        run: |
-          echo "curl -X POST "\https://panel.benrango.com/api/webhooks/fc10b0a0-7b90-4f4a-a324-75f5ece8360f\" "
