@@ -88,17 +88,6 @@ export async function api<T>(path: string, options: RequestOptions = {}): Promis
   const url = `${BASE_URL}${path.startsWith("/") ? path : `/${path}`}`;
   const startedAt = Date.now();
 
-  // TEMP diagnostic (dev only): full trace of the feed request for the backend
-  // team. The bearer token is masked.
-  const trace =
-    process.env.NODE_ENV !== "production" && method === "GET" && /^\/posts(\?|$)/.test(path);
-  if (trace) {
-    console.info(`[api] → ${method} ${url}`, {
-      headers: { ...headers, ...(token ? { Authorization: "Bearer ***" } : {}) },
-      body: body ?? null,
-    });
-  }
-
   let response: Response;
   try {
     response = await fetch(url, {
@@ -131,12 +120,6 @@ export async function api<T>(path: string, options: RequestOptions = {}): Promis
   if (response.status === 204) return undefined as T;
 
   const text = await response.text();
-  if (trace) {
-    console.info(
-      `[api] ← ${response.status} ${response.statusText} ${method} ${url} in ${Date.now() - startedAt}ms`,
-      `\n${text.slice(0, 2000)}`,
-    );
-  }
   let payload: unknown = undefined;
   if (text) {
     try {

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { RegretCard } from "@/components/feed/regret-card";
 import { EditProfileButton } from "@/components/profile/edit-profile-button";
 import { RepostCard } from "@/components/feed/repost-card";
-import { initial, safeAvatar } from "@/lib/utils";
+import { handleOf, initial, safeAvatar } from "@/lib/utils";
 import type { ApiAuthUser } from "@/types/api";
 import type { FeedItem } from "@/types";
 
@@ -27,7 +27,7 @@ export function ProfileView({
   /** What the posts list returned, used when the API omits `posts_count`. */
   loaded?: { count: number; hasMore: boolean };
 }) {
-  const handle = `@${user.username}`;
+  const handle = handleOf(user.username);
   // Flip AVATAR_UPLOAD to "1" the day POST /users/me/avatar is deployed.
   const canUploadPhoto = process.env.AVATAR_UPLOAD === "1";
   // The API does not serialise posts_count today, so the loaded page stands in:
@@ -35,7 +35,7 @@ export function ProfileView({
   const total = user.posts_count ?? loaded?.count;
   const approximate = user.posts_count === undefined && Boolean(loaded?.hasMore);
   const profile = {
-    username: user.username,
+    username: user.username ?? "",
     bio: user.bio ?? "",
     avatarUrl: user.avatar_url ?? "",
   };
@@ -79,6 +79,16 @@ export function ProfileView({
 
         <p className="mt-[7px] break-all text-center text-[16px] font-semibold text-white">
           {handle}
+          {user.certified ? (
+            <Image
+              src="/icons/verified.svg"
+              alt="Compte certifié"
+              width={18}
+              height={18}
+              unoptimized
+              className="ml-[5px] inline-block h-[16px] w-[16px] align-[-2px]"
+            />
+          ) : null}
         </p>
 
         {total !== undefined ? (

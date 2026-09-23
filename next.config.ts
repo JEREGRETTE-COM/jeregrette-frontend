@@ -1,6 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Ships a self-contained server under .next/standalone, so the Docker image
+  // holds only the files the app actually runs, without node_modules.
+  output: "standalone",
+
   // Hide the Next.js dev tools indicator (bottom-left badge).
   devIndicators: false,
 
@@ -9,7 +13,6 @@ const nextConfig: NextConfig = {
   outputFileTracingIncludes: {
     "/regret/[id]/image": ["./public/fonts/**"],
   },
-  output: "standalone",
 };
 
 export default nextConfig;

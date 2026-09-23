@@ -9,7 +9,12 @@ export type AuthProvider = "EMAIL" | (string & {});
  */
 export type ApiUser = {
   id: string;
-  username: string;
+  /** null on a guest account, until they choose one. */
+  username: string | null;
+  /** Verified badge, shown next to the handle. */
+  certified?: boolean;
+  /** Accounts created without signing up. */
+  is_guest?: boolean;
   email?: string | null;
   avatar_url: string | null;
   bio: string | null;
@@ -48,6 +53,23 @@ export type PostType = "ORIGINAL" | "REPOST";
 /** The values POST reactions accepts, and what `my_reaction` holds. */
 export type ReactionType = "LIKE" | "EMPATHY" | "SUPPORT" | "LAUGH" | "SAD";
 
+/** Counts per reaction type, as served inside each post. */
+export type ApiReactions = {
+  total: number;
+  breakdown: Record<string, number | string>;
+};
+
+/** Section a post belongs to. Null on posts published before rubriques. */
+export type ApiRubrique = {
+  id: string;
+  title: string;
+  slug: string;
+  description: string | null;
+  position: number;
+  posts_count: number;
+  created_at: string | null;
+};
+
 /**
  * A post. `type` distinguishes originals from reposts.
  *
@@ -63,8 +85,12 @@ export type ApiPost = {
   author_id: string;
   allow_repost: boolean;
   allow_opinion_on_repost: boolean;
-  /** A single total — the API exposes no per-reaction breakdown. */
+  /** Kept for older payloads; `reactions` carries the same total and the detail. */
   reactions_count: number;
+  /** Counts per type, straight in the post: no second call needed. */
+  reactions?: ApiReactions;
+  rubrique_id?: string | null;
+  rubrique?: ApiRubrique | null;
   reposts_count: number;
   score: number;
   /** The current user's reaction, null when they have not reacted. */
@@ -74,20 +100,15 @@ export type ApiPost = {
   original_post?: ApiPost | Record<string, never> | null;
 };
 
-/**
- * Opaque on purpose. The documentation and the live payload disagree on the key
- * names (cursor_created_at vs cursor_score), so whatever meta.next_cursor holds
- * is sent straight back as query parameters.
- */
-export type PostCursor = Record<string, string | number>;
-
-export type PaginationMeta = {
-  next_cursor: PostCursor | null;
+/** GET /posts has no cursor: `has_more` false only when the base is nearly empty. */
+export type FeedMeta = {
   has_more: boolean;
   limit: number | null;
+  /** Server time of the draw (ISO 8601), sent back as is to GET /posts/new-count. */
+  served_at?: string;
 };
 
-/** The reposts list pages by number, unlike the cursor-based feed. */
+/** The reposts list pages by number, unlike the feed. */
 export type PageMeta = {
   total: number;
   current_page: number;
@@ -105,7 +126,7 @@ export type OpaqueCursorMeta = {
 };
 
 export type ApiItem<T> = { data: T };
-export type ApiList<T> = { data: T[]; meta: PaginationMeta };
+export type ApiList<T> = { data: T[]; meta: FeedMeta };
 export type ApiPage<T> = { data: T[]; meta: PageMeta };
 export type ApiCursorPage<T> = { data: T[]; meta: OpaqueCursorMeta };
 

@@ -6,6 +6,11 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+/** Guests have no username yet, so the UI falls back to a neutral label. */
+export function handleOf(username: string | null | undefined) {
+  return username ? `@${username}` : "@Anonymous";
+}
+
 /** First letter of a handle, for the avatar fallback. "@kemityu" -> "K" */
 export function initial(handle: string) {
   return (handle.replace(/^@/, "")[0] ?? "?").toUpperCase();

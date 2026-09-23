@@ -4,7 +4,6 @@ import type {
   ApiList,
   ApiPage,
   ApiPost,
-  PostCursor,
   ReactionResult,
   ReactionSummary,
   ReactionType,
@@ -17,23 +16,37 @@ export function quotedPost(post: ApiPost): ApiPost | null {
   return quoted as ApiPost;
 }
 
+/**
+ * One draw of the feed. There is no cursor: the server remembers what it has
+ * shown and the next page is the very same call again, so every call marks its
+ * posts as seen whether or not the response ever reaches the screen.
+ */
 export async function listPosts({
   token,
-  cursor,
   limit,
+  rubriqueId,
 }: {
   token: string;
-  cursor?: PostCursor;
   limit?: number;
+  /** Narrows the feed to one section, per the `rubrique_id` query parameter. */
+  rubriqueId?: string;
 }) {
   const query = new URLSearchParams();
-  for (const [key, value] of Object.entries(cursor ?? {})) {
-    if (value !== null && value !== undefined) query.set(key, String(value));
-  }
+  if (rubriqueId) query.set("rubrique_id", rubriqueId);
   if (limit) query.set("limit", String(limit));
 
   const suffix = query.size ? `?${query}` : "";
   return api<ApiList<ApiPost>>(`/posts${suffix}`, { token });
+}
+
+/**
+ * Posts published after `since` (a `meta.served_at`), leaving out the reader's
+ * own and those they reacted to. Cheap, meant to be polled.
+ */
+export async function countNewPosts(since: string, token: string) {
+  const query = new URLSearchParams({ since });
+  const { count } = await api<{ count: number }>(`/posts/new-count?${query}`, { token });
+  return Number(count) || 0;
 }
 
 /** Anonymous: ten posts drawn at random, no cursor, `limit` ignored. */

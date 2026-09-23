@@ -26,16 +26,6 @@ export default async function ProfilePage() {
   ]);
   if (!user) redirect("/inscription");
 
-  // TEMP diagnostic (dev only): does the new regret exist on the server?
-  if (process.env.NODE_ENV !== "production") {
-    console.info("[diag profil] GET /users/me/posts", {
-      count: myPosts.posts.length,
-      hasMore: myPosts.hasMore,
-      posts_count: user.posts_count,
-      latest: myPosts.posts.slice(0, 3).map((post) => ({ id: post.id, created_at: post.created_at })),
-    });
-  }
-
   const items = await toFeedItems(myPosts.posts, token);
   return (
     <ProfileView

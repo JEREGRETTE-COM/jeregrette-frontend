@@ -2,7 +2,7 @@ import Link from "next/link";
 
 import { BackToTop } from "@/components/feed/back-to-top";
 import { FeedOutage } from "@/components/feed/feed-outage";
-import { LoadMore } from "@/components/feed/load-more";
+import { InfiniteFeed } from "@/components/feed/infinite-feed";
 import { RegretCard } from "@/components/feed/regret-card";
 import { RepostCard } from "@/components/feed/repost-card";
 import { getCurrentUser } from "@/lib/auth";
@@ -45,7 +45,8 @@ function JoinPrompt() {
     <div className="bg-row flex flex-col items-center gap-[12px] rounded-[25px] px-[20px] py-[22px] text-center">
       <p className="text-[17px] font-semibold text-white">Rejoins les regretteurs</p>
       <p className="text-muted max-w-[380px] text-[14px]">
-        Crée un compte pour réagir, republier et voir tout le fil.
+        Réagis et publie tout de suite. Crée un compte pour garder tes regrets et
+        voir tout le fil.
       </p>
       <div className="flex flex-wrap justify-center gap-[10px]">
         <Link
@@ -90,7 +91,7 @@ export default async function HomePage() {
             </p>
           ) : (
             <>
-              <FeedCards items={items} hideCounts />
+              <FeedCards items={items} />
               <JoinPrompt />
             </>
           )}
@@ -102,7 +103,9 @@ export default async function HomePage() {
 
   const page = state.page;
 
-  if (page.items.length === 0) {
+  // An empty draw is only the end when the API says so; otherwise the feed
+  // component asks again on its own.
+  if (page.items.length === 0 && !page.hasMore) {
     return (
       <div className="mx-auto w-full max-w-[599px] px-4 py-20 text-center">
         <p className="text-muted text-[15px]">Aucun regret pour le moment. Sois le premier.</p>
@@ -113,16 +116,7 @@ export default async function HomePage() {
   return (
     <>
       <div className={columnClassName}>
-        <FeedCards items={page.items} viewerId={viewer?.id} />
-
-        <LoadMore
-          initialIds={page.items.map((item) =>
-            item.kind === "regret" ? item.regret.id : item.repost.id,
-          )}
-          initialCursor={page.cursor}
-          initialHasMore={page.hasMore}
-          currentUserId={viewer?.id}
-        />
+        <InfiniteFeed initialPage={page} currentUserId={viewer?.id} />
       </div>
 
       <BackToTop />

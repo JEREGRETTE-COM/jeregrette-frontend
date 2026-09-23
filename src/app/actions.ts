@@ -7,6 +7,7 @@ import { api, ApiError } from "@/lib/api";
 import {
   clearSession,
   getAccessToken,
+  ensureSession,
   getCurrentUser,
   getRefreshToken,
   safeNext,
@@ -23,7 +24,6 @@ import {
   updatePostSettings,
   type PostSettings,
 } from "@/lib/posts";
-import { loadMoreFeed } from "@/lib/feed";
 import { markAllNotificationsRead, markNotificationRead } from "@/lib/notifications";
 import { reactions } from "@/lib/reactions";
 import {
@@ -35,7 +35,7 @@ import {
   type ProfileUpdate,
 } from "@/lib/users";
 import { isHttpsUrl } from "@/lib/utils";
-import type { AuthResponse, PostCursor, ReactionType } from "@/types/api";
+import type { AuthResponse, ReactionType } from "@/types/api";
 
 export type FormState = { error?: string };
 
@@ -151,8 +151,10 @@ export async function publishRegretAction(
   _state: FormState,
   formData: FormData,
 ): Promise<FormState> {
-  const token = await getAccessToken();
-  if (!token) redirect("/inscription");
+  const token = await ensureSession().catch(() => null);
+  if (!token) {
+    return { error: "Impossible d’ouvrir une session invitée. Crée un compte pour publier." };
+  }
 
   const text = String(formData.get("regret") ?? "").trim();
   if (!text) return { error: "Écris ton regret avant de publier." };
@@ -176,8 +178,10 @@ export async function publishRepostAction(
   _state: FormState,
   formData: FormData,
 ): Promise<FormState> {
-  const token = await getAccessToken();
-  if (!token) redirect("/inscription");
+  const token = await ensureSession().catch(() => null);
+  if (!token) {
+    return { error: "Impossible d’ouvrir une session invitée. Crée un compte pour republier." };
+  }
 
   const postId = String(formData.get("regretId") ?? "");
   const comment = String(formData.get("comment") ?? "").trim();
@@ -232,15 +236,23 @@ export async function loadReactionCountsAction(ids: string[]) {
   return Object.fromEntries(entries.filter((entry) => entry !== null));
 }
 
-export async function toggleReactionAction(formData: FormData) {
-  const token = await getAccessToken();
+/**
+ * true once the API took the vote. A form marked `scope=feed` belongs to the
+ * infinite feed, which updates its own list: revalidating would re-render the
+ * page, and the page re-rendering means another draw marked as seen.
+ */
+export async function toggleReactionAction(formData: FormData): Promise<boolean> {
+  // A visitor reacting for the first time becomes a guest, rather than being
+  // bounced to a sign-up form. Guest accounts are rate limited, so signing up
+  // stays the fallback when the API refuses to mint one.
+  const token = await ensureSession().catch(() => null);
   if (!token) redirect("/inscription");
 
   const postId = String(formData.get("itemId") ?? "");
   const reaction = String(formData.get("reaction") ?? "");
   const current = String(formData.get("current") ?? "");
   // Form data is user-controlled: only the documented types reach the API.
-  if (!postId || !REACTION_IDS.has(reaction)) return;
+  if (!postId || !REACTION_IDS.has(reaction)) return false;
 
   try {
     // Tapping the active reaction clears it, exactly like the optimistic update.
@@ -251,20 +263,23 @@ export async function toggleReactionAction(formData: FormData) {
     if (error.isUnauthenticated) redirect("/connexion");
     // Timeout, deleted post, refused vote: the optimistic chip falls back to the
     // server state once the action settles, so a failure must not crash the page.
-    return;
+    return false;
   }
 
   // Reaction bars also live on /profil, /u/[id] and /regret/[id]; a bare "/"
   // would only refresh the home page and leave those showing the old vote.
-  revalidatePath("/", "layout");
+  if (formData.get("scope") !== "feed") revalidatePath("/", "layout");
+  return true;
 }
 
-export async function loadMoreFeedAction(cursor: PostCursor | null, seenIds: string[]) {
-  const page = await loadMoreFeed(cursor, seenIds);
-  return page ?? { items: [], cursor: null, hasMore: false };
-}
+/** `revalidate: false` for the infinite feed, which patches its own list. */
+type MutationOptions = { revalidate?: boolean };
 
-export async function updatePostSettingsAction(postId: string, settings: PostSettings) {
+export async function updatePostSettingsAction(
+  postId: string,
+  settings: PostSettings,
+  { revalidate = true }: MutationOptions = {},
+) {
   const token = await getAccessToken();
   if (!token) return { error: "Session expirée." };
 
@@ -278,12 +293,17 @@ export async function updatePostSettingsAction(postId: string, settings: PostSet
     throw error;
   }
 
-  revalidatePath("/");
-  revalidatePath("/profil");
+  if (revalidate) {
+    revalidatePath("/");
+    revalidatePath("/profil");
+  }
   return {};
 }
 
-export async function deletePostAction(postId: string) {
+export async function deletePostAction(
+  postId: string,
+  { revalidate = true }: MutationOptions = {},
+) {
   const token = await getAccessToken();
   if (!token) return { error: "Session expirée." };
 
@@ -297,8 +317,10 @@ export async function deletePostAction(postId: string) {
     throw error;
   }
 
-  revalidatePath("/");
-  revalidatePath("/profil");
+  if (revalidate) {
+    revalidatePath("/");
+    revalidatePath("/profil");
+  }
   return {};
 }
 
