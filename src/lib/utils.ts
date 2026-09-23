@@ -8,7 +8,7 @@ export function cn(...inputs: ClassValue[]) {
 
 /** Guests have no username yet, so the UI falls back to a neutral label. */
 export function handleOf(username: string | null | undefined) {
-  return username ? `@${username}` : "Invité";
+  return username ? `@${username}` : "@Anonymous";
 }
 
 /** First letter of a handle, for the avatar fallback. "@kemityu" -> "K" */
