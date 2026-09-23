@@ -122,6 +122,30 @@ export function refreshTokens(refreshToken: string) {
 }
 
 /**
+ * Runs an authenticated call for a Route Handler. On a 401 the refresh token is
+ * swapped for new ones and the call replayed once; a second 401 is final.
+ *
+ * Route Handlers only: a Server Action writing cookies makes Next re-render the
+ * page, and the feed page re-rendering means another draw marked as seen.
+ */
+export async function withFreshToken<T>(call: (token: string) => Promise<T>): Promise<T> {
+  const [token, refreshToken] = await Promise.all([getAccessToken(), getRefreshToken()]);
+
+  if (token) {
+    try {
+      return await call(token);
+    } catch (error) {
+      if (!(error instanceof ApiError && error.isUnauthenticated)) throw error;
+    }
+  }
+  if (!refreshToken) throw new ApiError(401, "Unauthenticated.");
+
+  const tokens = await refreshTokens(refreshToken);
+  await saveSession(tokens);
+  return call(tokens.access_token);
+}
+
+/**
  * Cached for the render pass, so a page reading the session in several places
  * still costs one call to /user.
  *

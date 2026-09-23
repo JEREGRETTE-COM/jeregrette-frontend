@@ -3,6 +3,7 @@
 import { useEffect, useOptimistic, useRef, useState } from "react";
 
 import { toggleReactionAction } from "@/app/actions";
+import { useFeedActions } from "@/components/feed/feed-context";
 import { requestCounts } from "@/components/feed/reaction-counts";
 import { applyReaction, reactions, type ReactionState } from "@/lib/reactions";
 import { cn } from "@/lib/utils";
@@ -29,6 +30,7 @@ export function ReactionBar({
   countsKnown?: boolean;
 } & ReactionState) {
   const bar = useRef<HTMLFormElement>(null);
+  const feed = useFeedActions();
   const [fetched, setFetched] = useState<Record<ReactionId, number> | null>(null);
 
   useEffect(() => {
@@ -70,13 +72,24 @@ export function ReactionBar({
   return (
     <form
       ref={bar}
-      action={(formData: FormData) => {
-        addOptimistic(String(formData.get("reaction")) as ReactionId);
-        return toggleReactionAction(formData);
+      action={async (formData: FormData) => {
+        const reaction = String(formData.get("reaction")) as ReactionId;
+        const base = { counts: fetched ?? counts, reacted };
+        addOptimistic(reaction);
+        const ok = await toggleReactionAction(formData);
+        // The feed does not revalidate, so it keeps the vote itself, on every
+        // copy of the post, before the optimistic state lets go.
+        if (ok && feed) {
+          feed.patchPost(itemId, {
+            ...applyReaction(base, reaction),
+            countsKnown: countsKnown || fetched !== null,
+          });
+        }
       }}
       className="flex h-[34px] min-w-0 flex-1 items-center rounded-[20px] bg-white/20 p-[2px] sm:w-[314px] sm:flex-none"
     >
       <input type="hidden" name="itemId" value={itemId} />
+      {feed ? <input type="hidden" name="scope" value="feed" /> : null}
       <input type="hidden" name="current" value={state.reacted ?? ""} />
       {reactions.map((reaction) => {
         const active = reaction.id === state.reacted;

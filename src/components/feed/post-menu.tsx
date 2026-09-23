@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useEffect, useRef, useState, useTransition } from "react";
 
 import { deletePostAction, updatePostSettingsAction } from "@/app/actions";
+import { useFeedActions } from "@/components/feed/feed-context";
 import { useShareRegret, type ShareTarget } from "@/components/feed/use-share-regret";
 
 /**
@@ -37,6 +38,8 @@ export function PostMenu({
   const [pending, startTransition] = useTransition();
   const root = useRef<HTMLDivElement>(null);
   const shareImage = useShareRegret(share);
+  // Inside the infinite feed the list is patched here instead of revalidated.
+  const feed = useFeedActions();
 
   useEffect(() => {
     if (!open) return;
@@ -58,19 +61,28 @@ export function PostMenu({
 
   function toggle(settings: { allow_repost?: boolean; allow_opinion_on_repost?: boolean }) {
     startTransition(async () => {
-      const result = await updatePostSettingsAction(postId, settings);
+      const result = await updatePostSettingsAction(postId, settings, { revalidate: !feed });
       setError(result.error ?? null);
+      if (!result.error && feed) {
+        feed.patchPost(postId, {
+          ...(settings.allow_repost !== undefined && { allowRepost: settings.allow_repost }),
+          ...(settings.allow_opinion_on_repost !== undefined && {
+            allowOpinionOnRepost: settings.allow_opinion_on_repost,
+          }),
+        });
+      }
     });
   }
 
   function remove() {
     startTransition(async () => {
-      const result = await deletePostAction(postId);
+      const result = await deletePostAction(postId, { revalidate: !feed });
       if (result.error) {
         setError(result.error);
         return;
       }
       setOpen(false);
+      feed?.removePost(postId);
     });
   }
 

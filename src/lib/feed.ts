@@ -8,29 +8,24 @@ import {
   type ReactionBreakdown,
 } from "@/lib/posts";
 import type { FeedItem } from "@/types";
-import type { ApiPost, PostCursor } from "@/types/api";
+import type { ApiPost } from "@/types/api";
 
-/**
- * What one call really returns. The documentation says `limit` defaults to 100,
- * but the backend caps it at 50 whatever is requested (measured: 100, 150 and
- * 300 all came back with 50 posts).
- */
-const PAGE_SIZE = 50;
+/** Per the feed contract: small draws, since each one is marked seen at once. */
+export const PAGE_SIZE = 20;
 /** Parallel breakdown requests in flight. Enough to be quick, not a flood. */
 const BREAKDOWN_CONCURRENCY = 6;
 /**
- * How many cards get their counts before the page is sent. One call per post is
- * needed, the API allows 30 a minute, and a page holds 50 posts: the rest are
- * fetched by the cards themselves as they scroll into view.
+ * How many cards get their counts before the page is sent, for older payloads
+ * that do not carry `reactions`. The rest are fetched by the cards themselves.
  */
 const EAGER_BREAKDOWNS = 6;
 
 export type FeedPage = {
   items: FeedItem[];
-  /** null when the next batch must go through `limit` instead of the cursor. */
-  cursor: PostCursor | null;
-  /** The API's own `has_more`, even when nothing more could actually be fetched. */
+  /** The API's own `has_more`: the only signal that the feed has ended. */
   hasMore: boolean;
+  /** The draw's `meta.served_at`: GET /posts/new-count counts posts published after it. */
+  servedAt: string | null;
 };
 
 /**
@@ -113,7 +108,7 @@ export async function loadFeed(): Promise<FeedState> {
   if (!token) return { kind: "anonymous" };
 
   try {
-    return { kind: "ready", page: await loadFeedPage(token) };
+    return { kind: "ready", page: await fetchFeedPage(token) };
   } catch (error) {
     // An expired session reads as signed out; the proxy renews it on the next hit.
     if (error instanceof ApiError && error.isUnauthenticated) return { kind: "anonymous" };
@@ -122,58 +117,18 @@ export async function loadFeed(): Promise<FeedState> {
   }
 }
 
-async function loadFeedPage(token: string): Promise<FeedPage> {
-  const { data, meta } = await listPosts({ token, limit: PAGE_SIZE });
-  const hasMore = Boolean(meta?.has_more);
-
-  return {
-    items: await toFeedItems(data ?? [], token),
-    cursor: hasMore ? (meta?.next_cursor ?? null) : null,
-    hasMore,
-  };
-}
-
 /**
- * The next batch after what is already on screen.
- *
- * 1. The cursor — the correct path. The backend ignores it today and hands back
- *    the first page again, so its posts are all filtered out as already seen.
- * 2. A longer list through `limit`, keeping only unseen posts. That only helps
- *    once the backend stops capping `limit` at 50.
- *
- * Filtering happens before the breakdown calls, so re-fetched posts cost nothing
- * beyond the list itself. When neither path brings anything new while the API
- * still reports more, `hasMore` stays true: the caller then says the rest cannot
- * be loaded, instead of claiming the feed has ended.
+ * One draw of GET /posts. The server marks these posts as seen before replying,
+ * so a short page is normal and a post seen long ago may come back: nothing is
+ * filtered here.
  */
-export async function loadMoreFeed(
-  cursor: PostCursor | null,
-  seenIds: string[],
-): Promise<FeedPage | null> {
-  const token = await getAccessToken();
-  if (!token) return null;
-
-  const seen = new Set(seenIds);
-
-  if (cursor) {
-    const { data, meta } = await listPosts({ token, cursor, limit: PAGE_SIZE });
-    const fresh = (data ?? []).filter((post) => !seen.has(post.id));
-    if (fresh.length > 0) {
-      const hasMore = Boolean(meta?.has_more);
-      return {
-        items: await toFeedItems(fresh, token),
-        cursor: hasMore ? (meta?.next_cursor ?? null) : null,
-        hasMore,
-      };
-    }
-  }
-
-  const { data, meta } = await listPosts({ token, limit: seen.size + PAGE_SIZE });
-  const fresh = (data ?? []).filter((post) => !seen.has(post.id));
+export async function fetchFeedPage(token: string): Promise<FeedPage> {
+  const { data, meta } = await listPosts({ token, limit: PAGE_SIZE });
+  const posts = data ?? [];
 
   return {
-    items: await toFeedItems(fresh, token),
-    cursor: null,
-    hasMore: Boolean(meta?.has_more),
+    items: await toFeedItems(posts, token),
+    hasMore: meta?.has_more !== false,
+    servedAt: meta?.served_at ?? null,
   };
 }
