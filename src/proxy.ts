@@ -74,6 +74,13 @@ export async function proxy(request: NextRequest) {
 
   // Writing a regret or a repost needs a session, and a render cannot create
   // one. Visitors get a guest account here instead of a sign-up wall.
+  if (process.env.NODE_ENV !== "production") {
+    console.info(
+      `[auth] proxy ${request.nextUrl.pathname} — accès:${hasAccess ? "oui" : "non"}` +
+        ` rafraîchissement:${refreshToken ? "oui" : "non"}`,
+    );
+  }
+
   if (!hasAccess && !refreshToken && NEEDS_SESSION.test(request.nextUrl.pathname)) {
     try {
       const { tokens } = await guestSession();

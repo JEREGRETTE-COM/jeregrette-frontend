@@ -154,7 +154,7 @@ export async function publishRegretAction(
 ): Promise<FormState> {
   const token = await ensureSession().catch(() => null);
   if (!token) {
-    return { error: "Impossible d’ouvrir une session invitée. Crée un compte pour publier." };
+    return { error: "Impossible d’ouvrir une session anonyme. Crée un compte pour publier." };
   }
 
   const text = String(formData.get("regret") ?? "").trim();
@@ -184,7 +184,7 @@ export async function publishRepostAction(
 ): Promise<FormState> {
   const token = await ensureSession().catch(() => null);
   if (!token) {
-    return { error: "Impossible d’ouvrir une session invitée. Crée un compte pour republier." };
+    return { error: "Impossible d’ouvrir une session anonyme. Crée un compte pour republier." };
   }
 
   const postId = String(formData.get("regretId") ?? "");

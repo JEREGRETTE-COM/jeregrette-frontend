@@ -74,6 +74,17 @@ export function sessionCookies(tokens: AuthTokens): CookieDescriptor[] {
 }
 
 export async function saveSession(tokens: AuthTokens) {
+  // TEMP diagnostic (dev only): sizes only, never the tokens themselves.
+  if (process.env.NODE_ENV !== "production") {
+    console.info("[auth] saveSession", {
+      accessLen: tokens?.access_token?.length ?? 0,
+      refreshLen: tokens?.refresh_token?.length ?? 0,
+      type: tokens?.token_type,
+      expiresIn: tokens?.expires_in,
+      sanctumStyle: typeof tokens?.access_token === "string" && tokens.access_token.includes("|"),
+    });
+  }
+
   const jar = await cookies();
   for (const { name, value, options } of sessionCookies(tokens)) {
     jar.set(name, value, options);

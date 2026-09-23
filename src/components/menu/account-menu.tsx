@@ -227,7 +227,7 @@ export function AccountMenu({
             onClick={() => setOpen(false)}
             className="bg-field mt-[10px] flex flex-col gap-[4px] rounded-[10px] px-[12px] py-[10px]"
           >
-            <span className="text-[14px] font-medium text-white">Tu es en mode invité</span>
+            <span className="text-[14px] font-medium text-white">Tu es en mode anonyme</span>
             <span className="text-[11px] leading-[1.3] text-[#afafaf]">
               Crée un compte pour garder tes regrets et les retrouver plus tard.
             </span>
