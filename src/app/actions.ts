@@ -163,9 +163,12 @@ export async function publishRegretAction(
     return { error: `Ton regret dépasse ${MAX_CONTENT} caractères.` };
   }
 
+  // The toggle of Figma 20:372; the post carries the choice from the start.
+  const allowRepost = formData.get("allow_repost") !== "0";
+
   try {
     // The chosen colour is dropped: the post payload has no field for it yet.
-    await createPost({ content: text }, token);
+    await createPost({ content: text, allow_repost: allowRepost }, token);
   } catch (error) {
     if (error instanceof ApiError) return { error: error.displayMessage };
     throw error;

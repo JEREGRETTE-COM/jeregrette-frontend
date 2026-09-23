@@ -17,6 +17,8 @@ export function RegretComposer() {
     {},
   );
   const [colour, setColour] = useState(0);
+  // Figma 20:372 — the round button in the top bar, struck through once off.
+  const [allowRepost, setAllowRepost] = useState(true);
   const textarea = useRef<HTMLTextAreaElement>(null);
 
   // The message is vertically centred, so the field grows with its content.
@@ -34,6 +36,7 @@ export function RegretComposer() {
       style={{ backgroundColor: palette[colour] }}
     >
       <input type="hidden" name="background" value={palette[colour]} />
+      <input type="hidden" name="allow_repost" value={allowRepost ? "1" : "0"} />
 
       <Link
         href="/"
@@ -42,6 +45,32 @@ export function RegretComposer() {
       >
         <Image src="/icons/close.svg" alt="" width={35} height={35} unoptimized />
       </Link>
+
+      <button
+        type="button"
+        aria-pressed={allowRepost}
+        aria-label={
+          allowRepost
+            ? "Republication autorisée, désactiver"
+            : "Republication désactivée, autoriser"
+        }
+        title={
+          allowRepost
+            ? "Les autres peuvent republier ce regret"
+            : "Personne ne pourra republier ce regret"
+        }
+        onClick={() => setAllowRepost((current) => !current)}
+        className="absolute right-[72px] top-[10px] z-10 flex size-[35px] items-center justify-center rounded-full bg-white transition-opacity hover:opacity-90"
+      >
+        <Image
+          src={allowRepost ? "/icons/repost-dark.svg" : "/icons/repost-dark-off.svg"}
+          alt=""
+          width={20}
+          height={22}
+          unoptimized
+          className="h-[19.5px] w-[17.5px]"
+        />
+      </button>
 
       <button
         type="button"

@@ -103,15 +103,14 @@ export async function api<T>(path: string, options: RequestOptions = {}): Promis
   } catch (cause) {
     // Server-side log only; never the headers (bearer token) nor the body.
     // undici hides the real reason (DNS, TLS, timeout...) in `cause.cause`.
+    // Warn, not error: the callers handle this, and console.error would raise
+    // the dev overlay as if the page had crashed.
     const inner = (cause as { cause?: { code?: string; message?: string } })?.cause;
-    console.error("[api] network failure", {
-      method,
-      url,
-      ms: Date.now() - startedAt,
-      error: cause instanceof Error ? `${cause.name}: ${cause.message}` : String(cause),
-      code: inner?.code,
-      reason: inner?.message,
-    });
+    const reason = inner?.code ?? (cause instanceof Error ? cause.name : "unknown");
+    console.warn(
+      `[api] ${method} ${url} unreachable after ${Date.now() - startedAt}ms — ` +
+        `${reason}${inner?.message ? `: ${inner.message}` : ""}`,
+    );
     const error = new ApiError(0, "Le serveur est injoignable.");
     error.cause = cause;
     throw error;
