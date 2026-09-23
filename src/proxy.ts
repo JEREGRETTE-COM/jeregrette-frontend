@@ -4,6 +4,7 @@ import { ApiError } from "@/lib/api";
 import {
   ACCESS_COOKIE,
   guestSession,
+  isHttpsRequest,
   REFRESH_COOKIE,
   refreshTokens,
   sessionCookies,
@@ -48,11 +49,15 @@ const NEEDS_SESSION = /^\/republier(\/|$)/;
 
 /** Applies fresh cookies to this very request, then to the browser. */
 function withTokens(request: NextRequest, tokens: AuthTokens) {
-  for (const { name, value } of sessionCookies(tokens)) {
+  const cookies = sessionCookies(
+    tokens,
+    isHttpsRequest(request.headers, request.nextUrl.protocol),
+  );
+  for (const { name, value } of cookies) {
     request.cookies.set(name, value);
   }
   const response = NextResponse.next({ request: { headers: request.headers } });
-  for (const { name, value, options } of sessionCookies(tokens)) {
+  for (const { name, value, options } of cookies) {
     response.cookies.set(name, value, options);
   }
   return response;

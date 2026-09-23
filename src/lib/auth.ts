@@ -1,4 +1,4 @@
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { cache } from "react";
 
@@ -45,14 +45,26 @@ type CookieDescriptor = {
  * Shared by the Server Actions and the proxy, which set cookies through
  * different APIs but must agree on names, flags and lifetimes.
  */
-export function sessionCookies(tokens: AuthTokens): CookieDescriptor[] {
+/**
+ * Whether the browser reached us over https. A Secure cookie sent back over
+ * plain http is dropped by the browser (localhost aside), so tying the flag to
+ * NODE_ENV signed out every phone testing a production build over the LAN.
+ * Behind a TLS-terminating proxy the original scheme is in x-forwarded-proto.
+ */
+export function isHttpsRequest(requestHeaders: Headers, fallbackProtocol?: string) {
+  const forwarded = requestHeaders.get("x-forwarded-proto")?.split(",")[0]?.trim();
+  if (forwarded) return forwarded === "https";
+  if (fallbackProtocol) return fallbackProtocol === "https:";
+  return process.env.NODE_ENV === "production";
+}
+
+export function sessionCookies(tokens: AuthTokens, secure: boolean): CookieDescriptor[] {
   const seconds = Number(tokens.expires_in);
   const common = {
     httpOnly: true,
     sameSite: "lax",
     path: "/",
-    // Secure cookies are rejected over plain http outside localhost.
-    secure: process.env.NODE_ENV === "production",
+    secure,
   } as const;
 
   const descriptors: CookieDescriptor[] = [
@@ -81,8 +93,8 @@ export function sessionCookies(tokens: AuthTokens): CookieDescriptor[] {
 }
 
 export async function saveSession(tokens: AuthTokens) {
-  const jar = await cookies();
-  for (const { name, value, options } of sessionCookies(tokens)) {
+  const [jar, requestHeaders] = await Promise.all([cookies(), headers()]);
+  for (const { name, value, options } of sessionCookies(tokens, isHttpsRequest(requestHeaders))) {
     jar.set(name, value, options);
   }
 }
