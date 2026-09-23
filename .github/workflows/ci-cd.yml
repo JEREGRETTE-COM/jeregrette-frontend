@@ -1,0 +1,34 @@
+name: Docker Build and Push Server
+
+on:
+  push:
+    branches: [ ci-cd ]
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: benrango
+          password: ${{ secrets.DOCKER_HUB_TOKEN }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v4
+        with:
+          push: true
+          tags: |
+            benrango/jeregrette:${{github.sha}}
+            benrango/jeregrette:latest
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    steps:         
+      - name: Trigger Portainer Webhook
+        run: |
+          echo "curl -X POST "\https://panel.benrango.com/api/webhooks/fc10b0a0-7b90-4f4a-a324-75f5ece8360f\" "
