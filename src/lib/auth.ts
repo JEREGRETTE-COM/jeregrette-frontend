@@ -12,6 +12,11 @@ export const ACCESS_COOKIE = "jr_access";
 export const REFRESH_COOKIE = "jr_refresh";
 
 const FALLBACK_ACCESS_MAX_AGE = 60 * 60;
+/**
+ * The access cookie dies this long before the token does, so the proxy renews
+ * it ahead of time instead of a request hitting a 401 at the API.
+ */
+const ACCESS_EARLY_EXPIRY = 60;
 const REFRESH_MAX_AGE = 60 * 60 * 24 * 30;
 
 export function toAuthor(user: ApiUser): Author {
@@ -57,7 +62,9 @@ export function sessionCookies(tokens: AuthTokens): CookieDescriptor[] {
       options: {
         ...common,
         maxAge:
-          Number.isFinite(seconds) && seconds > 0 ? seconds : FALLBACK_ACCESS_MAX_AGE,
+          Number.isFinite(seconds) && seconds > 0
+            ? Math.max(seconds - ACCESS_EARLY_EXPIRY, Math.ceil(seconds / 2))
+            : FALLBACK_ACCESS_MAX_AGE,
       },
     },
   ];
@@ -114,11 +121,55 @@ export async function getRefreshToken() {
   return (await cookies()).get(REFRESH_COOKIE)?.value;
 }
 
+/**
+ * How long a used refresh token keeps answering with the tokens it was swapped
+ * for. Requests sent before the browser stored the new cookies still carry it.
+ */
+const REFRESH_REUSE_MS = 30_000;
+
+type Refresh = { tokens: Promise<RefreshResponse>; startedAt: number };
+
+/**
+ * On globalThis so the proxy and the route handlers, bundled apart, share one
+ * map. Per server process only: several instances can still race, which only
+ * a grace period on the backend fully covers.
+ */
+const globalRefreshes = globalThis as typeof globalThis & {
+  __jeregretteRefreshes?: Map<string, Refresh>;
+};
+const refreshes = (globalRefreshes.__jeregretteRefreshes ??= new Map());
+
+/**
+ * The API rotates refresh tokens: the first use revokes it and any later use
+ * gets a 401. When the access cookie expires, the page, its RSC requests, the
+ * feed and its poll all arrive at once with the same refresh token, and each
+ * losing 401 used to make the proxy wipe the session. Every caller holding the
+ * same token now shares a single call and its result.
+ */
 export function refreshTokens(refreshToken: string) {
-  return api<RefreshResponse>("/auth/refresh", {
+  const now = Date.now();
+  for (const [key, refresh] of refreshes) {
+    if (now - refresh.startedAt > REFRESH_REUSE_MS) refreshes.delete(key);
+  }
+
+  const pending = refreshes.get(refreshToken);
+  if (pending) return pending.tokens;
+
+  const tokens = api<RefreshResponse>("/auth/refresh", {
     method: "POST",
     body: { refresh_token: refreshToken },
   });
+  refreshes.set(refreshToken, { tokens, startedAt: now });
+
+  // An outage or a timeout leaves the token unused: let the next request retry.
+  // A refusal stays shared, since the token is dead for everyone.
+  tokens.catch((error) => {
+    if (!(error instanceof ApiError && error.status > 0 && error.status < 500)) {
+      refreshes.delete(refreshToken);
+    }
+  });
+
+  return tokens;
 }
 
 /**
