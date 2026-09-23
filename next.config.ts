@@ -9,7 +9,6 @@ const nextConfig: NextConfig = {
   outputFileTracingIncludes: {
     "/regret/[id]/image": ["./public/fonts/**"],
   },
-  output: "standalone",
 };
 
 export default nextConfig;

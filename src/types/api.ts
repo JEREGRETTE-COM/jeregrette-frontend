@@ -100,20 +100,15 @@ export type ApiPost = {
   original_post?: ApiPost | Record<string, never> | null;
 };
 
-/**
- * Opaque on purpose. The documentation and the live payload disagree on the key
- * names (cursor_created_at vs cursor_score), so whatever meta.next_cursor holds
- * is sent straight back as query parameters.
- */
-export type PostCursor = Record<string, string | number>;
-
-export type PaginationMeta = {
-  next_cursor: PostCursor | null;
+/** GET /posts has no cursor: `has_more` false only when the base is nearly empty. */
+export type FeedMeta = {
   has_more: boolean;
   limit: number | null;
+  /** Server time of the draw (ISO 8601), sent back as is to GET /posts/new-count. */
+  served_at?: string;
 };
 
-/** The reposts list pages by number, unlike the cursor-based feed. */
+/** The reposts list pages by number, unlike the feed. */
 export type PageMeta = {
   total: number;
   current_page: number;
@@ -131,7 +126,7 @@ export type OpaqueCursorMeta = {
 };
 
 export type ApiItem<T> = { data: T };
-export type ApiList<T> = { data: T[]; meta: PaginationMeta };
+export type ApiList<T> = { data: T[]; meta: FeedMeta };
 export type ApiPage<T> = { data: T[]; meta: PageMeta };
 export type ApiCursorPage<T> = { data: T[]; meta: OpaqueCursorMeta };
 
