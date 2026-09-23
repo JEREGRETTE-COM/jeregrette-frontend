@@ -55,6 +55,16 @@ export function AuthorRow({
         <Link href={`/u/${author.id}`} className="hover:underline">
           {author.handle}
         </Link>
+        {author.certified ? (
+          <Image
+            src="/icons/verified.svg"
+            alt="Compte certifié"
+            width={18}
+            height={18}
+            unoptimized
+            className="ml-[4px] inline-block h-[14px] w-[14px] align-[-2px]"
+          />
+        ) : null}
         {note ? <span className="font-normal text-[#afafaf]"> {note}</span> : null}
       </p>
       {time ? (

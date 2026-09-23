@@ -37,6 +37,32 @@ type LaravelError = {
   errors?: Record<string, string[]>;
 };
 
+/**
+ * The only backend wordings the app repeats, in French. Anything unknown falls
+ * back to a generic sentence rather than exposing what the server said.
+ */
+const KNOWN_MESSAGES: [RegExp, string][] = [
+  [/already been taken|déjà (pris|utilisé)/i, "Ce nom est déjà utilisé."],
+  [/invalid credentials|incorrect/i, "Identifiant ou mot de passe incorrect."],
+  [/unauthenticated|unauthorized|token/i, "Session expirée, reconnecte-toi."],
+  [/too many|rate limit/i, "Trop de tentatives. Patiente une minute puis réessaie."],
+  [/not found|introuvable/i, "Introuvable."],
+  [/forbidden|not allowed|permission/i, "Action non autorisée."],
+  [/valid email|email.*(invalid|format)/i, "Adresse email invalide."],
+  [/confirmation|match/i, "Les deux mots de passe ne correspondent pas."],
+  [/required|obligatoire/i, "Il manque une information."],
+  [/(too|au moins).*(short|long|caractères)|max|min/i, "Une information ne respecte pas la longueur attendue."],
+];
+
+function translate(message: string | undefined) {
+  const clean = message?.trim();
+  if (!clean) return null;
+  for (const [pattern, french] of KNOWN_MESSAGES) {
+    if (pattern.test(clean)) return french;
+  }
+  return null;
+}
+
 export class ApiError extends Error {
   constructor(
     readonly status: number,
@@ -48,14 +74,21 @@ export class ApiError extends Error {
   }
 
   /**
-   * The message a form should show: first field error, else the summary. The
-   * backend sometimes sends raw translation keys ("validation.required_without"),
-   * which must never reach the screen.
+   * What a form is allowed to show. The backend answers in English and, with
+   * debug left on, has leaked SQL dumps, database hosts and even a user's email
+   * onto the login screen. So nothing from the API reaches the eye unless it
+   * matches a sentence we wrote: everything else becomes a plain fallback, and
+   * the real cause stays in the server logs.
    */
   get displayMessage() {
-    const first = Object.values(this.errors ?? {})[0]?.[0];
-    const message = first ?? this.message;
-    return /^[a-z_]+(\.[a-z_]+)+/.test(message) ? "Certaines informations sont invalides." : message;
+    if (this.status === 0) return "Connexion impossible. Vérifie ta connexion et réessaie.";
+    if (this.status === 429) return "Trop de tentatives. Patiente une minute puis réessaie.";
+    if (this.status >= 500) {
+      return "Le service est momentanément indisponible. Réessaie dans quelques minutes.";
+    }
+
+    const field = Object.values(this.errors ?? {})[0]?.[0];
+    return translate(field) ?? translate(this.message) ?? "Une erreur est survenue. Réessaie.";
   }
 
   get isUnauthenticated() {
@@ -88,17 +121,6 @@ export async function api<T>(path: string, options: RequestOptions = {}): Promis
   const url = `${BASE_URL}${path.startsWith("/") ? path : `/${path}`}`;
   const startedAt = Date.now();
 
-  // TEMP diagnostic (dev only): full trace of the feed request for the backend
-  // team. The bearer token is masked.
-  const trace =
-    process.env.NODE_ENV !== "production" && method === "GET" && /^\/posts(\?|$)/.test(path);
-  if (trace) {
-    console.info(`[api] → ${method} ${url}`, {
-      headers: { ...headers, ...(token ? { Authorization: "Bearer ***" } : {}) },
-      body: body ?? null,
-    });
-  }
-
   let response: Response;
   try {
     response = await fetch(url, {
@@ -114,29 +136,30 @@ export async function api<T>(path: string, options: RequestOptions = {}): Promis
   } catch (cause) {
     // Server-side log only; never the headers (bearer token) nor the body.
     // undici hides the real reason (DNS, TLS, timeout...) in `cause.cause`.
+    // Warn, not error: the callers handle this, and console.error would raise
+    // the dev overlay as if the page had crashed.
     const inner = (cause as { cause?: { code?: string; message?: string } })?.cause;
-    console.error("[api] network failure", {
-      method,
-      url,
-      ms: Date.now() - startedAt,
-      error: cause instanceof Error ? `${cause.name}: ${cause.message}` : String(cause),
-      code: inner?.code,
-      reason: inner?.message,
-    });
+    const reason = inner?.code ?? (cause instanceof Error ? cause.name : "unknown");
+    console.warn(
+      `[api] ${method} ${url} unreachable after ${Date.now() - startedAt}ms — ` +
+        `${reason}${inner?.message ? `: ${inner.message}` : ""}`,
+    );
     const error = new ApiError(0, "Le serveur est injoignable.");
     error.cause = cause;
     throw error;
   }
 
+  // TEMP diagnostic (dev only): follows a sign-in without ever printing tokens.
+  if (process.env.NODE_ENV !== "production" && /^\/(auth|users\/me)/.test(path)) {
+    console.info(
+      `[auth] ${method} ${path} → ${response.status} in ${Date.now() - startedAt}ms` +
+        `${token ? " (avec token)" : " (sans token)"}`,
+    );
+  }
+
   if (response.status === 204) return undefined as T;
 
   const text = await response.text();
-  if (trace) {
-    console.info(
-      `[api] ← ${response.status} ${response.statusText} ${method} ${url} in ${Date.now() - startedAt}ms`,
-      `\n${text.slice(0, 2000)}`,
-    );
-  }
   let payload: unknown = undefined;
   if (text) {
     try {

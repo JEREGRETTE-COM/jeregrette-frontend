@@ -3,9 +3,9 @@ import { redirect } from "next/navigation";
 import { cache } from "react";
 
 import { api, ApiError } from "@/lib/api";
-import { safeAvatar } from "@/lib/utils";
+import { handleOf, safeAvatar } from "@/lib/utils";
 import { getMe } from "@/lib/users";
-import type { ApiAuthUser, ApiUser, AuthTokens, RefreshResponse } from "@/types/api";
+import type { ApiAuthUser, ApiUser, AuthTokens, RefreshResponse, AuthResponse } from "@/types/api";
 import type { Author } from "@/types";
 
 export const ACCESS_COOKIE = "jr_access";
@@ -17,8 +17,10 @@ const REFRESH_MAX_AGE = 60 * 60 * 24 * 30;
 export function toAuthor(user: ApiUser): Author {
   return {
     id: user.id,
-    handle: `@${user.username}`,
+    handle: handleOf(user.username),
     avatar: safeAvatar(user.avatar_url),
+    certified: Boolean(user.certified),
+    guest: Boolean(user.is_guest),
   };
 }
 
@@ -72,10 +74,41 @@ export function sessionCookies(tokens: AuthTokens): CookieDescriptor[] {
 }
 
 export async function saveSession(tokens: AuthTokens) {
+  // TEMP diagnostic (dev only): sizes only, never the tokens themselves.
+  if (process.env.NODE_ENV !== "production") {
+    console.info("[auth] saveSession", {
+      accessLen: tokens?.access_token?.length ?? 0,
+      refreshLen: tokens?.refresh_token?.length ?? 0,
+      type: tokens?.token_type,
+      expiresIn: tokens?.expires_in,
+      sanctumStyle: typeof tokens?.access_token === "string" && tokens.access_token.includes("|"),
+    });
+  }
+
   const jar = await cookies();
   for (const { name, value, options } of sessionCookies(tokens)) {
     jar.set(name, value, options);
   }
+}
+
+/**
+ * Anyone acting for the first time gets a guest account: the API hands back real
+ * tokens, so reacting and posting work without signing up. Cookies can only be
+ * written from an action, a route handler or the proxy — never during a render.
+ */
+export function guestSession() {
+  return api<AuthResponse>("/auth/guest", { method: "POST" });
+}
+
+export async function createGuestSession() {
+  const auth = await guestSession();
+  await saveSession(auth.tokens);
+  return auth.tokens.access_token;
+}
+
+/** The current token, or a brand new guest one. */
+export async function ensureSession() {
+  return (await getAccessToken()) ?? (await createGuestSession());
 }
 
 export async function clearSession() {

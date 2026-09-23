@@ -35,6 +35,19 @@ function emptyCounts(): Record<ReactionId, number> {
   >;
 }
 
+/** The post now carries its own counts; the API types them loosely. */
+function breakdownOf(post: ApiPost): ReactionBreakdown | undefined {
+  const raw = post.reactions?.breakdown;
+  if (!raw || typeof raw !== "object") return undefined;
+
+  const breakdown: ReactionBreakdown = {};
+  for (const [type, count] of Object.entries(raw)) {
+    const value = Number(count);
+    if (Number.isFinite(value)) breakdown[type as ReactionId] = value;
+  }
+  return breakdown;
+}
+
 function countsFrom(breakdown: ReactionBreakdown | undefined) {
   const counts = emptyCounts();
   for (const reaction of reactions) {
@@ -44,6 +57,9 @@ function countsFrom(breakdown: ReactionBreakdown | undefined) {
 }
 
 export function toRegret(post: ApiPost, breakdown?: ReactionBreakdown): Regret {
+  // Prefer what the post carries; the separate call is only for older payloads.
+  const counts = breakdownOf(post) ?? breakdown;
+
   return {
     id: post.id,
     author: toAuthor(post.author),
@@ -53,8 +69,8 @@ export function toRegret(post: ApiPost, breakdown?: ReactionBreakdown): Regret {
     time: relativeTime(post.created_at),
     text: post.content,
     background: backgroundFor(post.id),
-    counts: countsFrom(breakdown),
-    countsKnown: breakdown !== undefined || post.reactions_count === 0,
+    counts: countsFrom(counts),
+    countsKnown: counts !== undefined || post.reactions_count === 0,
     reacted: post.my_reaction ?? undefined,
     reposts: post.reposts_count,
   };
@@ -81,8 +97,10 @@ export function toFeedItem(
         allowOpinionOnRepost: post.allow_opinion_on_repost,
         time: relativeTime(post.created_at),
         comment: post.content,
-        counts: countsFrom(breakdowns.get(post.id)),
-        countsKnown: breakdowns.get(post.id) !== undefined || post.reactions_count === 0,
+        counts: countsFrom(breakdownOf(post) ?? breakdowns.get(post.id)),
+        countsKnown:
+          (breakdownOf(post) ?? breakdowns.get(post.id)) !== undefined ||
+          post.reactions_count === 0,
         reacted: post.my_reaction ?? undefined,
         reposts: post.reposts_count,
         regret: toRegret(quoted, breakdowns.get(quoted.id)),
