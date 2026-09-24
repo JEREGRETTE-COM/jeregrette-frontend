@@ -219,10 +219,13 @@ export function InfiniteFeed({
   });
 
   // Effects run after layout effects, so the virtualizer's mount has happened.
-  // The scroll event makes it read the real position of the window.
+  // The scroll event makes it read the real position of the window — on the
+  // next frame, because the virtualizer answers it with flushSync, which React
+  // refuses while it is still committing this very effect.
   useEffect(() => {
     hydrated.current = true;
-    window.dispatchEvent(new Event("scroll"));
+    const frame = requestAnimationFrame(() => window.dispatchEvent(new Event("scroll")));
+    return () => cancelAnimationFrame(frame);
   }, []);
 
   const actions = useMemo<FeedActions>(

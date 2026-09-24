@@ -57,7 +57,9 @@ async function HeaderSession() {
   // Signed in but the API is down: showing "Se connecter" would be a lie.
   if (!author && token) return null;
 
-  if (author) {
+  // An anonymous account has no profile, no notifications and nothing to sign
+  // out of: it sees the visitor's actions, which are its way to a real account.
+  if (author && !author.guest) {
     return (
       <div className="flex min-w-0 items-center gap-[12px]">
         <span className="hidden truncate text-[14px] font-medium text-white sm:inline">

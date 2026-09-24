@@ -25,6 +25,8 @@ export default async function ProfilePage() {
     }),
   ]);
   if (!user) redirect("/inscription");
+  // Nothing to show an anonymous account: it has no name, no bio, no settings.
+  if (user.is_guest) redirect("/inscription");
 
   const items = await toFeedItems(myPosts.posts, token);
   return (
