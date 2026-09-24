@@ -11,7 +11,6 @@ import { initial, isHttpsUrl } from "@/lib/utils";
 
 /** Backend rules on PATCH /users/me. */
 const MAX_BIO = 280;
-const MAX_AVATAR_URL = 2048;
 /** Ceiling before shrinking; a phone photo is well under it. */
 const MAX_PICK_BYTES = 10 * 1024 * 1024;
 
@@ -30,12 +29,9 @@ const labelClassName = "text-muted mb-[6px] block text-[13px]";
 export function EditProfileButton({
   profile,
   variant = "icon",
-  canUploadPhoto = false,
 }: {
   profile: Profile;
   variant?: "icon" | "text";
-  /** The backend upload route is not deployed yet; hide the picker until it is. */
-  canUploadPhoto?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState(profile);
@@ -127,8 +123,7 @@ export function EditProfileButton({
   }
 
   const photo = draft.avatarUrl.trim();
-  const photoIsLink = isHttpsUrl(photo);
-  const shownPhoto = preview ?? (photoIsLink && !brokenPhoto ? photo : null);
+  const shownPhoto = preview ?? (isHttpsUrl(photo) && !brokenPhoto ? photo : null);
   const changed =
     file !== null ||
     draft.username.trim().replace(/^@/, "") !== profile.username ||
@@ -201,85 +196,43 @@ export function EditProfileButton({
                   )}
 
                   <div className="flex min-w-0 flex-1 flex-col gap-[8px]">
-                    {canUploadPhoto ? (
-                      <>
-                        {/* accept="image/*" opens the gallery, or the camera on a phone */}
-                        <input
-                          ref={picker}
-                          type="file"
-                          accept="image/*"
-                          onChange={pick}
-                          className="hidden"
-                        />
-                        <div className="flex flex-wrap gap-[8px]">
-                          <button
-                            type="button"
-                            onClick={() => picker.current?.click()}
-                            disabled={preparing}
-                            className="h-[42px] rounded-[15px] bg-white px-[16px] text-[14px] font-semibold text-black transition-opacity hover:opacity-90 disabled:opacity-40"
-                          >
-                            {preparing ? "Préparation…" : "Choisir une photo"}
-                          </button>
-                          {shownPhoto ? (
-                            <button
-                              type="button"
-                              onClick={removePhoto}
-                              className="h-[42px] rounded-[15px] border-[0.5px] border-[#c5c5c5] px-[14px] text-[13px] text-white transition-colors hover:bg-white/5"
-                            >
-                              Retirer
-                            </button>
-                          ) : null}
-                        </div>
-                        <p className="text-label text-[12px]">
-                          {file
-                            ? `Prête à envoyer (${Math.max(1, Math.round(file.size / 1024))} Ko)`
-                            : "JPG, PNG ou WebP. Recadrée en carré automatiquement."}
-                        </p>
-                      </>
-                    ) : (
-                      <>
-                        <p className="text-[14px] text-white">Ta photo de profil</p>
-                        <p className="text-label text-[12px]">
-                          Colle le lien d’une image ci-dessous.
-                          {shownPhoto ? " Le bouton Retirer l’enlève." : ""}
-                        </p>
-                        {shownPhoto ? (
-                          <button
-                            type="button"
-                            onClick={removePhoto}
-                            className="h-[38px] w-fit rounded-[15px] border-[0.5px] border-[#c5c5c5] px-[14px] text-[13px] text-white transition-colors hover:bg-white/5"
-                          >
-                            Retirer
-                          </button>
-                        ) : null}
-                      </>
-                    )}
+                    {/* accept="image/*" opens the gallery, or the camera on a phone */}
+                    <input
+                      ref={picker}
+                      type="file"
+                      accept="image/*"
+                      onChange={pick}
+                      className="hidden"
+                    />
+                    <div className="flex flex-wrap gap-[8px]">
+                      <button
+                        type="button"
+                        onClick={() => picker.current?.click()}
+                        disabled={preparing}
+                        className="h-[42px] rounded-[15px] bg-white px-[16px] text-[14px] font-semibold text-black transition-opacity hover:opacity-90 disabled:opacity-40"
+                      >
+                        {preparing ? "Préparation…" : "Choisir une photo"}
+                      </button>
+                      {shownPhoto ? (
+                        <button
+                          type="button"
+                          onClick={removePhoto}
+                          className="h-[42px] rounded-[15px] border-[0.5px] border-[#c5c5c5] px-[14px] text-[13px] text-white transition-colors hover:bg-white/5"
+                        >
+                          Retirer
+                        </button>
+                      ) : null}
+                    </div>
+                    <p className="text-label text-[12px]">
+                      {file
+                        ? `Prête à envoyer (${Math.max(1, Math.round(file.size / 1024))} Ko)`
+                        : "Depuis ta galerie ou ton appareil photo. Recadrée en carré automatiquement."}
+                    </p>
                   </div>
                 </div>
 
-                <label htmlFor="profile-avatar" className={`${labelClassName} mt-[14px]`}>
-                  {canUploadPhoto
-                    ? "Ou colle le lien d’une photo (facultatif)"
-                    : "Lien de ta photo (facultatif)"}
-                </label>
-                <input
-                  id="profile-avatar"
-                  name="avatar_url"
-                  type="url"
-                  inputMode="url"
-                  value={draft.avatarUrl}
-                  onChange={(event) => change("avatarUrl", event.target.value)}
-                  maxLength={MAX_AVATAR_URL}
-                  placeholder="https://…"
-                  disabled={file !== null}
-                  className={`${fieldClassName} h-[42px] disabled:opacity-40`}
-                />
-                <p className="text-danger mt-[6px] min-h-[16px] text-[12px]">
-                  {photo && !photoIsLink && !file
-                    ? "Le lien doit commencer par https://"
-                    : brokenPhoto && !file
-                      ? "Impossible d’afficher cette image."
-                      : null}
+                <p className="text-danger mt-[10px] min-h-[16px] text-[12px]">
+                  {brokenPhoto && !file ? "Impossible d’afficher cette photo." : null}
                 </p>
 
                 <label htmlFor="profile-username" className={`${labelClassName} mt-[6px]`}>
