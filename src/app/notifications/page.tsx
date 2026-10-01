@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 
 import { MarkAllReadButton } from "@/components/notifications/mark-all-read-button";
 import { NotificationItem } from "@/components/notifications/notification-item";
-import { getAccessToken } from "@/lib/auth";
+import { getAccessToken, getCurrentUser } from "@/lib/auth";
 import { toNotificationView } from "@/lib/notification-text";
 import { listNotifications } from "@/lib/notifications";
 
@@ -15,8 +15,10 @@ export const metadata: Metadata = { title: "Notifications" };
 
 /** No Figma screen yet: built from the profile header and the menu rows. */
 export default async function NotificationsPage() {
-  const token = await getAccessToken();
+  const [token, user] = await Promise.all([getAccessToken(), getCurrentUser()]);
   if (!token) redirect("/connexion");
+  // An anonymous account receives none: nobody can follow or mention it.
+  if (user?.is_guest) redirect("/inscription");
 
   const result = await listNotifications(token).catch(() => null);
 
