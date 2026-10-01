@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Poppins } from "next/font/google";
 import "./globals.css";
 
@@ -22,7 +22,22 @@ export const metadata: Metadata = {
     template: `%s | ${siteConfig.name}`,
   },
   description: siteConfig.description,
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: siteConfig.name,
+  },
 };
+
+export const viewport: Viewport = {
+  themeColor: '#0f172a',
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+};
+
+
 
 /** `modal` is the @modal slot: filled only when a route is intercepted into a dialog. */
 export default function RootLayout({ children, modal }: LayoutProps<"/">) {

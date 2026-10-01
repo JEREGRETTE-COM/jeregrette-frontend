@@ -1,8 +1,19 @@
 import type { NextConfig } from "next";
+import withPWAInit from '@ducanh2912/next-pwa';
+
+const withPWA = withPWAInit({
+  dest: 'public',
+  disable: process.env.NODE_ENV === 'development',
+  register: true,
+  //skipWaiting: true,
+});
 
 const nextConfig: NextConfig = {
   // Hide the Next.js dev tools indicator (bottom-left badge).
   devIndicators: false,
+  turbopack: {
+
+  },
 
   // The share-image route reads these from disk; without this they are not
   // bundled into the serverless function and it fails with ENOENT in production.
@@ -12,4 +23,4 @@ const nextConfig: NextConfig = {
   output: "standalone",
 };
 
-export default nextConfig;
+export default withPWA(nextConfig);;
