@@ -21,26 +21,27 @@ function FeedCards({
   viewerId?: string;
   hideCounts?: boolean;
 }) {
-  return items.map((item) =>
-    <ProtectedContent key={item.kind === "regret" ? item.regret.id : item.repost.id}>
-      {item.kind === "regret" ? (
-          <RegretCard
-            key={item.regret.id}
-            regret={item.regret}
-            currentUserId={viewerId}
-            hideCounts={hideCounts}
-          />
-        ) : (
-          <RepostCard
-            key={item.repost.id}
-            repost={item.repost}
-            currentUserId={viewerId}
-            hideCounts={hideCounts}
-          />
-        )
+  return (
+  <ProtectedContent>
+    { 
+      items.map((item) =>
+        item.kind === "regret" ? (
+            <RegretCard
+              key={item.regret.id}
+              regret={item.regret}
+              currentUserId={viewerId}
+              hideCounts={hideCounts}
+            />
+          ) : (
+            <RepostCard
+              key={item.repost.id}
+              repost={item.repost}
+              currentUserId={viewerId}
+              hideCounts={hideCounts}
+            />
+          ))
       }
-    </ProtectedContent>
-  );
+  </ProtectedContent>)
 }
 
 /** Figma 85:863 shows the feed to visitors, with sign-up as the way in. */
