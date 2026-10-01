@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 
+import { signOutAction } from "@/app/actions";
 import { RegretCard } from "@/components/feed/regret-card";
 import { EditProfileButton } from "@/components/profile/edit-profile-button";
 import { RepostCard } from "@/components/feed/repost-card";
@@ -52,7 +53,22 @@ export function ProfileView({
           </Link>
           <p className="text-[16px] text-white">Profil</p>
           {/* Figma 167:994 — the pencil only exists on your own profile */}
-          {own ? <EditProfileButton profile={profile} /> : null}
+          {own ? (
+          <div className="ml-auto flex items-center gap-[10px]">
+            <EditProfileButton profile={profile} />
+            {/* the menu is gone (Figma 248:962), so signing out lives here */}
+            <form action={signOutAction}>
+              <button
+                type="submit"
+                aria-label="Se déconnecter"
+                title="Se déconnecter"
+                className="flex size-[35px] items-center justify-center transition-opacity hover:opacity-80"
+              >
+                <Image src="/icons/logout.svg" alt="" width={20} height={20} unoptimized />
+              </button>
+            </form>
+          </div>
+        ) : null}
         </div>
       </header>
 

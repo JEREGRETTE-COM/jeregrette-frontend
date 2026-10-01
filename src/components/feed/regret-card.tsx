@@ -32,6 +32,7 @@ export function RegretCard({
         reposts={regret.reposts}
         repostHref={`/republier/${regret.id}`}
         canRepost={regret.allowRepost}
+        own={currentUserId === regret.authorId}
         hideCounts={hideCounts}
       />
     </article>

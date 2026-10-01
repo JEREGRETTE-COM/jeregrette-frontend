@@ -53,7 +53,7 @@ export default function ProtectedContent({ children }: { children: React.ReactNo
             Contenu protégé
           </p>
           <p className="text-sm text-slate-300 mt-2">
-            Veuillez utiliser le bouton d'exportation officiel pour obtenir ce document.
+            Veuillez utiliser le bouton d’exportation officiel pour obtenir ce document.
           </p>
         </div>
       )}

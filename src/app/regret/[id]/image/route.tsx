@@ -6,6 +6,7 @@ import { ImageResponse } from "next/og";
 import { getAccessToken } from "@/lib/auth";
 import { toRegret } from "@/lib/feed-mapping";
 import { getPost } from "@/lib/posts";
+import { PATTERN_OPACITY, patternFor, patterns } from "@/lib/patterns";
 import { initial, regretFontSize, safeAvatar } from "@/lib/utils";
 
 /** Square, the format WhatsApp previews best. */
@@ -44,6 +45,12 @@ function avatarSource(avatar: string) {
   }
 }
 
+/** Satori fetches nothing: the tile travels inside the markup, as a data URI. */
+function patternTile(name: ReturnType<typeof patternFor>) {
+  const bytes = readFileSync(asset("patterns", patterns[name].file));
+  return `data:image/svg+xml;base64,${bytes.toString("base64")}`;
+}
+
 /** Satori has no `inset` shorthand — every layer states its own box. */
 const fill = { position: "absolute" as const, top: 0, left: 0, width: SIZE, height: SIZE };
 
@@ -75,6 +82,20 @@ export async function GET(
           fontFamily: "Poppins",
         }}
       >
+        {/* the same watermark as the card, read from disk and inlined */}
+        <div
+          style={{
+            ...fill,
+            display: "flex",
+            opacity: PATTERN_OPACITY,
+            backgroundImage: `url(${patternTile(patternFor(regret.id))})`,
+            backgroundRepeat: "repeat",
+            backgroundSize: `${px(patterns[patternFor(regret.id)].width)}px ${px(
+              patterns[patternFor(regret.id)].height,
+            )}px`,
+          }}
+        />
+
         {/* the card's dark top-down overlay */}
         <div
           style={{

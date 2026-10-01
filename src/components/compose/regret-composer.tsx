@@ -2,16 +2,16 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useActionState, useRef, useState } from "react";
 
 import { publishRegretAction, type FormState } from "@/app/actions";
 import { Button } from "@/components/ui/button";
-
-/** Card colours taken from the feed designs, cycled by the brush button. */
-const palette = ["#4b8710", "#a20c37", "#9da20c", "#950ca2", "#383861"];
+import { palette } from "@/lib/palette";
 
 /** Figma 106:1177 — full-bleed colour, centred message, send bar. */
-export function RegretComposer() {
+export function RegretComposer({ inDialog = false }: { inDialog?: boolean }) {
+  const router = useRouter();
   const [state, formAction, pending] = useActionState<FormState, FormData>(
     publishRegretAction,
     {},
@@ -38,13 +38,25 @@ export function RegretComposer() {
       <input type="hidden" name="background" value={palette[colour]} />
       <input type="hidden" name="allow_repost" value={allowRepost ? "1" : "0"} />
 
-      <Link
-        href="/"
-        aria-label="Fermer"
-        className="absolute left-[15px] top-[10px] z-10 size-[35px] transition-opacity hover:opacity-80"
-      >
-        <Image src="/icons/close.svg" alt="" width={35} height={35} unoptimized />
-      </Link>
+      {/* over the feed, closing pops the intercepted URL instead of stacking one */}
+      {inDialog ? (
+        <button
+          type="button"
+          aria-label="Fermer"
+          onClick={() => router.back()}
+          className="absolute left-[15px] top-[10px] z-10 size-[35px] transition-opacity hover:opacity-80"
+        >
+          <Image src="/icons/close.svg" alt="" width={35} height={35} unoptimized />
+        </button>
+      ) : (
+        <Link
+          href="/"
+          aria-label="Fermer"
+          className="absolute left-[15px] top-[10px] z-10 size-[35px] transition-opacity hover:opacity-80"
+        >
+          <Image src="/icons/close.svg" alt="" width={35} height={35} unoptimized />
+        </Link>
+      )}
 
       <button
         type="button"

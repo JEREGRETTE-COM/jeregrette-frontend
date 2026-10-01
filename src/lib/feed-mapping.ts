@@ -1,20 +1,9 @@
 import { toAuthor } from "@/lib/auth";
+import { backgroundFor } from "@/lib/palette";
 import { quotedPost, type ReactionBreakdown } from "@/lib/posts";
 import { reactions } from "@/lib/reactions";
 import type { ApiPost } from "@/types/api";
 import type { FeedItem, ReactionId, Regret } from "@/types";
-
-/** Card colours from the design. The backend stores none, so we derive one. */
-const palette = ["#a20c37", "#9da20c", "#950ca2", "#383861", "#4b8710"];
-
-/**
- * Stable per post, so a regret keeps its colour across renders and devices.
- * Replace with the stored value once the post payload carries one.
- */
-export function backgroundFor(id: string) {
-  const sum = [...id].reduce((total, char) => total + char.charCodeAt(0), 0);
-  return palette[sum % palette.length];
-}
 
 const MINUTE = 60_000;
 const HOUR = 60 * MINUTE;

@@ -2,7 +2,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { Suspense } from "react";
 
-import { AccountMenu } from "@/components/menu/account-menu";
 import { getAccessToken, getCurrentAuthor } from "@/lib/auth";
 import { loadUnreadCount } from "@/lib/notifications";
 
@@ -60,13 +59,44 @@ async function HeaderSession() {
   // An anonymous account has no profile, no notifications and nothing to sign
   // out of: it sees the visitor's actions, which are its way to a real account.
   if (author && !author.guest) {
+    const badge = unreadCount > 9 ? "9+" : String(unreadCount);
+
+    // Figma 248:962 — two round buttons replace the menu: notifications, profile.
     return (
-      <div className="flex min-w-0 items-center gap-[12px]">
-        <span className="hidden truncate text-[14px] font-medium text-white sm:inline">
-          {author.handle}
-        </span>
-        {/* Signing out now lives inside the menu, as in Figma 131:968. */}
-        <AccountMenu author={author} unreadCount={unreadCount} />
+      <div className="flex shrink-0 items-center gap-[10px]">
+        <Link
+          href="/notifications"
+          aria-label={
+            unreadCount > 0 ? `Notifications, ${unreadCount} non lues` : "Notifications"
+          }
+          className="relative flex size-[40px] items-center justify-center rounded-full bg-white/10 transition-colors hover:bg-white/20"
+        >
+          <Image src="/icons/bell.svg" alt="" width={20} height={20} unoptimized />
+          {unreadCount > 0 ? (
+            <span className="bg-danger absolute -right-[2px] -top-[2px] flex h-[18px] min-w-[18px] items-center justify-center rounded-full px-[4px] text-[10px] font-bold text-white">
+              {badge}
+            </span>
+          ) : null}
+        </Link>
+
+        <Link
+          href="/profil"
+          aria-label="Mon profil"
+          className="flex size-[40px] items-center justify-center overflow-hidden rounded-full bg-white/10 transition-colors hover:bg-white/20"
+        >
+          {author.avatar ? (
+            <Image
+              src={author.avatar}
+              alt=""
+              width={40}
+              height={40}
+              unoptimized
+              className="h-[40px] w-[40px] object-cover"
+            />
+          ) : (
+            <Image src="/icons/profile.svg" alt="" width={20} height={20} unoptimized />
+          )}
+        </Link>
       </div>
     );
   }

@@ -61,6 +61,7 @@ export function RepostCard({
         repostHref={`/republier/${repost.regret.id}`}
         /* the pill reposts the quoted regret, so its author's choice applies */
         canRepost={repost.regret.allowRepost}
+        own={currentUserId === repost.regret.authorId}
         hideCounts={hideCounts}
       />
     </article>

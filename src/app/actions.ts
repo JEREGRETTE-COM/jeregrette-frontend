@@ -198,7 +198,15 @@ export async function publishRepostAction(
   } catch (error) {
     if (error instanceof ApiError) {
       if (error.isUnauthenticated) redirect("/connexion");
-      if (error.status === 403) return { error: "L’auteur n’autorise pas cette republication." };
+      if (error.status === 403) {
+        // The API refuses two cases: reposting your own regret, and an author
+        // who turned reposts off. Its wording tells them apart.
+        return {
+          error: /own post/i.test(error.message)
+            ? "Tu ne peux pas republier ton propre regret."
+            : "L’auteur n’autorise pas cette republication.",
+        };
+      }
       if (error.status === 404) return { error: "Ce regret n’existe plus." };
       return { error: error.displayMessage };
     }

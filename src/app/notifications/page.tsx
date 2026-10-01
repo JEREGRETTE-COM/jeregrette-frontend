@@ -4,6 +4,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { MarkAllReadButton } from "@/components/notifications/mark-all-read-button";
+import { BrowserNotificationsSwitch } from "@/components/notifications/browser-notifications-switch";
 import { NotificationItem } from "@/components/notifications/notification-item";
 import { getAccessToken, getCurrentUser } from "@/lib/auth";
 import { toNotificationView } from "@/lib/notification-text";
@@ -49,6 +50,8 @@ export default async function NotificationsPage() {
       </header>
 
       <div className="mx-auto flex w-full max-w-[599px] flex-col px-[25px] pb-[60px] pt-[12px]">
+        <BrowserNotificationsSwitch />
+
         {!result ? (
           <p className="text-muted mt-[40px] text-center text-[15px]">
             Impossible de charger les notifications pour le moment.

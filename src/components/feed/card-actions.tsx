@@ -17,6 +17,7 @@ export function CardActions({
   reposts,
   repostHref,
   canRepost,
+  own = false,
   hideCounts = false,
   countsKnown = true,
 }: {
@@ -27,6 +28,8 @@ export function CardActions({
   repostHref: string;
   /** The author's `allow_repost`; the backend refuses reposts when it is off. */
   canRepost: boolean;
+  /** Your own regret: the API answers "You cannot repost your own post". */
+  own?: boolean;
   hideCounts?: boolean;
   /** false while this card's counts have not been fetched yet. */
   countsKnown?: boolean;
@@ -58,14 +61,18 @@ export function CardActions({
       />
 
       {/* ml-auto pins the repost pill to the right edge once the reactions stop growing */}
-      {canRepost ? (
+      {canRepost && !own ? (
         <Link href={repostHref} aria-label="Republier" className={pillClassName}>
           {pillContent}
         </Link>
       ) : (
         <span
           aria-disabled
-          title="L’auteur a désactivé la republication"
+          title={
+            own
+              ? "Tu ne peux pas republier ton propre regret"
+              : "L’auteur a désactivé la republication"
+          }
           className={`${pillClassName} cursor-not-allowed opacity-40`}
         >
           {pillContent}
