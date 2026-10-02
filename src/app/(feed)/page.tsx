@@ -8,7 +8,6 @@ import { RepostCard } from "@/components/feed/repost-card";
 import { getCurrentUser } from "@/lib/auth";
 import { loadFeed, loadPublicFeed } from "@/lib/feed";
 import type { FeedItem } from "@/types";
-import ProtectedContent from "@/components/feed/ProtectedContent";
 
 export const dynamic = "force-dynamic";
 
@@ -21,27 +20,23 @@ function FeedCards({
   viewerId?: string;
   hideCounts?: boolean;
 }) {
-  return (
-  <ProtectedContent>
-    { 
-      items.map((item) =>
-        item.kind === "regret" ? (
-            <RegretCard
-              key={item.regret.id}
-              regret={item.regret}
-              currentUserId={viewerId}
-              hideCounts={hideCounts}
-            />
-          ) : (
-            <RepostCard
-              key={item.repost.id}
-              repost={item.repost}
-              currentUserId={viewerId}
-              hideCounts={hideCounts}
-            />
-          ))
-      }
-  </ProtectedContent>)
+  return items.map((item) =>
+    item.kind === "regret" ? (
+      <RegretCard
+        key={item.regret.id}
+        regret={item.regret}
+        currentUserId={viewerId}
+        hideCounts={hideCounts}
+      />
+    ) : (
+      <RepostCard
+        key={item.repost.id}
+        repost={item.repost}
+        currentUserId={viewerId}
+        hideCounts={hideCounts}
+      />
+    ),
+  );
 }
 
 /** Figma 85:863 shows the feed to visitors, with sign-up as the way in. */
