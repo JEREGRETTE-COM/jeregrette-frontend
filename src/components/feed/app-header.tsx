@@ -71,7 +71,14 @@ async function HeaderSession() {
           }
           className="relative flex size-[40px] items-center justify-center rounded-full bg-white/10 transition-colors hover:bg-white/20"
         >
-          <Image src="/icons/bell.svg" alt="" width={20} height={20} unoptimized />
+          <Image
+            src="/icons/bell.svg"
+            alt=""
+            width={21}
+            height={23}
+            unoptimized
+            className="h-[23px] w-[21px]"
+          />
           {unreadCount > 0 ? (
             <span className="bg-danger absolute -right-[2px] -top-[2px] flex h-[18px] min-w-[18px] items-center justify-center rounded-full px-[4px] text-[10px] font-bold text-white">
               {badge}

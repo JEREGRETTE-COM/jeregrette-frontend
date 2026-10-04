@@ -24,9 +24,12 @@ import {
   updatePostSettings,
   type PostSettings,
 } from "@/lib/posts";
+import { toFeedItems } from "@/lib/feed";
 import { markAllNotificationsRead, markNotificationRead } from "@/lib/notifications";
 import { reactions } from "@/lib/reactions";
 import {
+  listMyPosts,
+  listUserPosts,
   AVATAR_TYPES,
   MAX_AVATAR_BYTES,
   MAX_BIO,
@@ -439,4 +442,29 @@ export async function markAllNotificationsReadAction(): Promise<FormState> {
   // the header badge and the list both show the unread count
   revalidatePath("/", "layout");
   return {};
+}
+
+/**
+ * The next page of someone's regrets. `target` is "me" or a user id, so the own
+ * profile and another's share one action.
+ */
+export async function loadMoreProfilePostsAction(target: string, cursor: string) {
+  const token = await getAccessToken();
+  if (!token || !cursor) return { items: [], cursor: null, hasMore: false };
+
+  try {
+    const page =
+      target === "me"
+        ? await listMyPosts(token, { cursor })
+        : await listUserPosts(target, token, { cursor });
+
+    return {
+      items: await toFeedItems(page.posts, token),
+      cursor: page.nextCursor,
+      hasMore: page.hasMore,
+    };
+  } catch {
+    // A failed page leaves the button in place: the reader can try again.
+    return { items: [], cursor, hasMore: true };
+  }
 }

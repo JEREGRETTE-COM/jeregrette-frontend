@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { BackButton } from "@/components/feed/back-button";
 import { RegretCard } from "@/components/feed/regret-card";
 import { RepostCard } from "@/components/feed/repost-card";
 import { siteConfig } from "@/lib/config";
@@ -69,21 +70,31 @@ export default async function RegretPage({ params }: PageProps<"/regret/[id]">) 
   if (!item) notFound();
 
   return (
-    <main className="bg-surface font-poppins flex flex-1 flex-col items-center justify-center gap-6 p-4">
-      <div className="w-[599px] max-w-full">
-        {item.kind === "repost" ? (
-          <RepostCard repost={item.repost} currentUserId={viewer?.id} />
-        ) : (
-          <RegretCard regret={item.regret} currentUserId={viewer?.id} />
-        )}
-      </div>
+    <main className="bg-surface font-poppins flex flex-1 flex-col">
+      {/* opened from a notification or a shared link: there has to be a way out */}
+      <header className="sticky top-0 z-30 h-[70px] w-full bg-[rgba(22,22,22,0.75)] backdrop-blur-[25px]">
+        <div className="mx-auto flex h-full w-full max-w-[599px] items-center gap-[16px] px-[25px]">
+          <BackButton />
+          <p className="text-[16px] text-white">Le regret</p>
+        </div>
+      </header>
 
-      <Link
-        href="/"
-        className="flex h-[37px] items-center rounded-[10px] bg-white px-4 text-[14px] font-bold text-black transition-opacity hover:opacity-90"
-      >
-        Voir tous les regrets
-      </Link>
+      <div className="flex flex-1 flex-col items-center justify-center gap-6 p-4">
+        <div className="w-[599px] max-w-full">
+          {item.kind === "repost" ? (
+            <RepostCard repost={item.repost} currentUserId={viewer?.id} />
+          ) : (
+            <RegretCard regret={item.regret} currentUserId={viewer?.id} />
+          )}
+        </div>
+
+        <Link
+          href="/"
+          className="flex h-[37px] items-center rounded-[10px] bg-white px-4 text-[14px] font-bold text-black transition-opacity hover:opacity-90"
+        >
+          Voir tous les regrets
+        </Link>
+      </div>
     </main>
   );
 }

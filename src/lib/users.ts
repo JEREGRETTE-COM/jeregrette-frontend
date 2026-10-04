@@ -11,8 +11,18 @@ function hasMore(value: boolean | string) {
   return value === true || value === "true" || value === "1";
 }
 
-async function listPostsPage(path: string, token: string, cursor?: string) {
-  const suffix = cursor ? `?cursor=${encodeURIComponent(cursor)}` : "";
+/** Measured against the live API: `cursor` and `limit` are both honoured. */
+export const PROFILE_PAGE_SIZE = 50;
+
+async function listPostsPage(
+  path: string,
+  token: string,
+  { cursor, limit = PROFILE_PAGE_SIZE }: { cursor?: string; limit?: number } = {},
+) {
+  const query = new URLSearchParams();
+  if (cursor) query.set("cursor", cursor);
+  if (limit) query.set("limit", String(limit));
+  const suffix = query.size ? `?${query}` : "";
   const page = await api<ApiCursorPage<ApiPost>>(`${path}${suffix}`, { token });
   return {
     posts: page.data,
@@ -31,13 +41,16 @@ export async function getUser(id: string, token: string) {
   return data;
 }
 
-/** The cursor query parameter name is inferred and unverified. */
-export function listMyPosts(token: string, cursor?: string) {
-  return listPostsPage("/users/me/posts", token, cursor);
+export function listMyPosts(token: string, options?: { cursor?: string; limit?: number }) {
+  return listPostsPage("/users/me/posts", token, options);
 }
 
-export function listUserPosts(id: string, token: string, cursor?: string) {
-  return listPostsPage(`/users/${id}/posts`, token, cursor);
+export function listUserPosts(
+  id: string,
+  token: string,
+  options?: { cursor?: string; limit?: number },
+) {
+  return listPostsPage(`/users/${id}/posts`, token, options);
 }
 
 /** Matches the backend limit on PATCH /users/me. */

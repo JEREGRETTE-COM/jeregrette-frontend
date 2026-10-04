@@ -117,7 +117,7 @@ export function RegretComposer({ inDialog = false }: { inDialog?: boolean }) {
       <Button
         type="submit"
         disabled={pending}
-        className="relative mx-auto mb-[16px] h-[75px] w-[calc(100%-48px)] max-w-[491px] shrink-0 rounded-[15px] bg-white text-[15px] font-medium text-black hover:bg-white/90"
+        className="relative mx-auto mb-[16px] h-[75px] w-[calc(100%-48px)] max-w-[491px] shrink-0 rounded-full bg-white text-[15px] font-medium text-black hover:bg-white/90"
       >
         {pending ? "Publication…" : "Publier mon regret"}
         <Image

@@ -1,19 +1,22 @@
 import { AuthorRow } from "@/components/feed/author-row";
+import { splitRegret } from "@/lib/mentions";
 import { PATTERN_OPACITY, patternFor, patterns } from "@/lib/patterns";
 import { cn, regretFontSize } from "@/lib/utils";
 import type { Regret } from "@/types";
 
-/** Underline "jeregrette.com" the way the design does. */
+/** Underlines "jeregrette.com" and lifts the mentions the author wrote. */
 function renderText(text: string) {
-  return text.split(/(jeregrette\.com)/).map((part, index) =>
-    part === "jeregrette.com" ? (
-      <span key={index} className="underline">
-        {part}
+  return splitRegret(text).map((part, index) => {
+    if (part.kind === "plain") return part.text;
+    return (
+      <span
+        key={index}
+        className={part.kind === "site" ? "underline" : "font-bold underline decoration-white/40"}
+      >
+        {part.text}
       </span>
-    ) : (
-      part
-    ),
-  );
+    );
+  });
 }
 
 /**

@@ -6,6 +6,7 @@ import { ImageResponse } from "next/og";
 import { getAccessToken } from "@/lib/auth";
 import { toRegret } from "@/lib/feed-mapping";
 import { getPost } from "@/lib/posts";
+import { splitRegret } from "@/lib/mentions";
 import { PATTERN_OPACITY, patternFor, patterns } from "@/lib/patterns";
 import { initial, regretFontSize, safeAvatar } from "@/lib/utils";
 
@@ -127,7 +128,22 @@ export async function GET(
               whiteSpace: "pre-wrap",
             }}
           >
-            {regret.text}
+            {/* same split as the card: mentions stand out in the shared image too */}
+            {splitRegret(regret.text).map((part, index) =>
+              part.kind === "plain" ? (
+                part.text
+              ) : (
+                <span
+                  key={index}
+                  style={{
+                    fontWeight: part.kind === "mention" ? 700 : 600,
+                    textDecoration: "underline",
+                  }}
+                >
+                  {part.text}
+                </span>
+              ),
+            )}
           </div>
         </div>
 
