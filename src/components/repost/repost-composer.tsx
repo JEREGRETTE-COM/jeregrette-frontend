@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 import { useActionState } from "react";
 
 import { publishRepostAction, type FormState } from "@/app/actions";
+import { MENTION_LIST_ID, MentionSuggestions } from "@/components/compose/mention-suggestions";
+import { useMentionAutocomplete } from "@/components/compose/use-mention-autocomplete";
 import { AuthorRow } from "@/components/feed/author-row";
 import { RegretSurface } from "@/components/feed/regret-surface";
 import { Button } from "@/components/ui/button";
@@ -27,6 +29,9 @@ export function RepostComposer({
     publishRepostAction,
     {},
   );
+
+  const { textarea, suggestions, active, update, onKeyDown, select, close } =
+    useMentionAutocomplete();
 
   // Opening /republier/{id} directly bypasses the disabled pill on the card.
   const blocked = !regret.allowRepost;
@@ -70,14 +75,29 @@ export function RepostComposer({
       </div>
 
       {regret.allowOpinionOnRepost ? (
-        <textarea
-          name="comment"
-          maxLength={500}
-          disabled={blocked}
-          placeholder="Ajouter un commentaire"
-          aria-label="Ajouter un commentaire"
-          className="bg-field-alt mx-auto mt-[14px] h-[118px] w-[calc(100%-48px)] max-w-[471px] shrink-0 resize-none rounded-[15px] px-[18px] py-[12px] text-[15px] text-white outline-none placeholder:text-white/35 disabled:opacity-40"
-        />
+        <div className="relative mx-auto mt-[14px] w-[calc(100%-48px)] max-w-[471px] shrink-0">
+          <textarea
+            ref={textarea}
+            name="comment"
+            onInput={update}
+            onClick={update}
+            onKeyDown={onKeyDown}
+            onBlur={close}
+            aria-autocomplete="list"
+            aria-controls={MENTION_LIST_ID}
+            maxLength={500}
+            disabled={blocked}
+            placeholder="Ajouter un commentaire"
+            aria-label="Ajouter un commentaire"
+            className="bg-field-alt block h-[118px] w-full resize-none rounded-[15px] px-[18px] py-[12px] text-[15px] text-white outline-none placeholder:text-white/35 disabled:opacity-40"
+          />
+          <MentionSuggestions
+            suggestions={suggestions}
+            active={active}
+            onSelect={select}
+            className="absolute inset-x-0 top-full mt-[6px]"
+          />
+        </div>
       ) : (
         <p className="text-muted mx-auto mt-[14px] w-[calc(100%-48px)] max-w-[471px] shrink-0 text-center text-[14px]">
           L’auteur n’autorise pas les commentaires sur ce regret.

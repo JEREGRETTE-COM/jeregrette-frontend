@@ -6,7 +6,7 @@ import { ImageResponse } from "next/og";
 import { getAccessToken } from "@/lib/auth";
 import { toRegret } from "@/lib/feed-mapping";
 import { getPost } from "@/lib/posts";
-import { PATTERN_OPACITY, patternFor, patterns } from "@/lib/patterns";
+import { PATTERN_OPACITY, patterns, type Watermark } from "@/lib/patterns";
 import { initial, regretFontSize, safeAvatar } from "@/lib/utils";
 
 /** Square, the format WhatsApp previews best. */
@@ -46,7 +46,7 @@ function avatarSource(avatar: string) {
 }
 
 /** Satori fetches nothing: the tile travels inside the markup, as a data URI. */
-function patternTile(name: ReturnType<typeof patternFor>) {
+function patternTile(name: Watermark) {
   const bytes = readFileSync(asset("patterns", patterns[name].file));
   return `data:image/svg+xml;base64,${bytes.toString("base64")}`;
 }
@@ -88,10 +88,10 @@ export async function GET(
             ...fill,
             display: "flex",
             opacity: PATTERN_OPACITY,
-            backgroundImage: `url(${patternTile(patternFor(regret.id))})`,
+            backgroundImage: `url(${patternTile(regret.watermark)})`,
             backgroundRepeat: "repeat",
-            backgroundSize: `${px(patterns[patternFor(regret.id)].width)}px ${px(
-              patterns[patternFor(regret.id)].height,
+            backgroundSize: `${px(patterns[regret.watermark].width)}px ${px(
+              patterns[regret.watermark].height,
             )}px`,
           }}
         />

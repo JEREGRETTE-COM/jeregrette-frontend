@@ -1,5 +1,6 @@
 import { toAuthor } from "@/lib/auth";
-import { backgroundFor } from "@/lib/palette";
+import { colorOf } from "@/lib/palette";
+import { watermarkOf } from "@/lib/patterns";
 import { quotedPost, type ReactionBreakdown } from "@/lib/posts";
 import { reactions } from "@/lib/reactions";
 import type { ApiPost } from "@/types/api";
@@ -57,7 +58,9 @@ export function toRegret(post: ApiPost, breakdown?: ReactionBreakdown): Regret {
     allowOpinionOnRepost: post.allow_opinion_on_repost,
     time: relativeTime(post.created_at),
     text: post.content,
-    background: backgroundFor(post.id),
+    background: colorOf(post),
+    watermark: watermarkOf(post),
+    mentions: post.mentions ?? [],
     counts: countsFrom(counts),
     countsKnown: counts !== undefined || post.reactions_count === 0,
     reacted: post.my_reaction ?? undefined,
@@ -86,6 +89,7 @@ export function toFeedItem(
         allowOpinionOnRepost: post.allow_opinion_on_repost,
         time: relativeTime(post.created_at),
         comment: post.content,
+        mentions: post.mentions ?? [],
         counts: countsFrom(breakdownOf(post) ?? breakdowns.get(post.id)),
         countsKnown:
           (breakdownOf(post) ?? breakdowns.get(post.id)) !== undefined ||

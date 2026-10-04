@@ -1,4 +1,6 @@
 import { api } from "@/lib/api";
+import { isKnownColor } from "@/lib/palette";
+import type { Watermark } from "@/lib/patterns";
 import type {
   ApiItem,
   ApiList,
@@ -62,7 +64,22 @@ export type CreatePostBody = {
   media_url?: string | null;
   allow_repost?: boolean;
   allow_opinion_on_repost?: boolean;
+  /** One of the palette colours; the API derives one from the id when absent. */
+  background_color?: string;
+  watermark?: Watermark;
 };
+
+/** What the composer form becomes. Length checks stay with the caller. */
+export function regretBodyFrom(form: FormData): CreatePostBody {
+  // Anything off the palette is left out and the API picks one from the id.
+  const colour = String(form.get("background") ?? "").toLowerCase();
+  return {
+    content: String(form.get("regret") ?? "").trim(),
+    // The toggle of Figma 20:372; the post carries the choice from the start.
+    allow_repost: form.get("allow_repost") !== "0",
+    ...(isKnownColor(colour) ? { background_color: colour } : {}),
+  };
+}
 
 export async function createPost(body: CreatePostBody, token: string) {
   const { data } = await api<ApiItem<ApiPost>>("/posts", {

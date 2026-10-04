@@ -42,6 +42,7 @@ type LaravelError = {
  * back to a generic sentence rather than exposing what the server said.
  */
 const KNOWN_MESSAGES: [RegExp, string][] = [
+  [/background.?colou?r|watermark/i, "Cette couleur n’est pas disponible. Choisis-en une autre."],
   [/already been taken|déjà (pris|utilisé)/i, "Ce nom est déjà utilisé."],
   [/invalid credentials|incorrect/i, "Identifiant ou mot de passe incorrect."],
   [/unauthenticated|unauthorized|token/i, "Session expirée, reconnecte-toi."],

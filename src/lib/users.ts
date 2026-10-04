@@ -40,6 +40,20 @@ export function listUserPosts(id: string, token: string, cursor?: string) {
   return listPostsPage(`/users/${id}/posts`, token, cursor);
 }
 
+export type UserSuggestion = {
+  id: string;
+  username: string;
+  avatar_url: string | null;
+  certified: boolean;
+};
+
+/** Username prefix search, for the @mention suggestions. */
+export async function searchUsers(query: string, token: string, limit = 6) {
+  const params = new URLSearchParams({ q: query, limit: String(limit) });
+  const { data } = await api<{ data: UserSuggestion[] }>(`/users/search?${params}`, { token });
+  return data;
+}
+
 /** Matches the backend limit on PATCH /users/me. */
 export const MAX_BIO = 280;
 

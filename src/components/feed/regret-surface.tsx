@@ -1,5 +1,6 @@
 import { AuthorRow } from "@/components/feed/author-row";
-import { PATTERN_OPACITY, patternFor, patterns } from "@/lib/patterns";
+import { MentionText } from "@/components/feed/mention-text";
+import { PATTERN_OPACITY, patterns } from "@/lib/patterns";
 import { cn, regretFontSize } from "@/lib/utils";
 import type { Regret } from "@/types";
 
@@ -41,13 +42,13 @@ export function RegretSurface({
         backgroundImage: `linear-gradient(180deg, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0) 50%), linear-gradient(90deg, ${regret.background} 0%, ${regret.background} 100%)`,
       }}
     >
-      {/* Figma 244:928 — the mark, drawn from the post id, repeated over the card */}
+      {/* Figma 244:928 — the post's mark, repeated over the card */}
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0"
         style={{
           opacity: PATTERN_OPACITY,
-          backgroundImage: `url(/patterns/${patterns[patternFor(regret.id)].file})`,
+          backgroundImage: `url(/patterns/${patterns[regret.watermark].file})`,
           backgroundRepeat: "repeat",
         }}
       />
@@ -73,7 +74,7 @@ export function RegretSurface({
           )}
           style={{ fontSize: regretFontSize(regret.text, compact) }}
         >
-          {renderText(regret.text)}
+          <MentionText text={regret.text} mentions={regret.mentions} renderPlain={renderText} />
         </p>
       </div>
     </div>

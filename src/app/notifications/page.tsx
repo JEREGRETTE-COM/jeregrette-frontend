@@ -4,6 +4,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { MarkAllReadButton } from "@/components/notifications/mark-all-read-button";
+import { LiveNotifications } from "@/components/notifications/live-notifications";
 import { BrowserNotificationsSwitch } from "@/components/notifications/browser-notifications-switch";
 import { NotificationItem } from "@/components/notifications/notification-item";
 import { getAccessToken, getCurrentUser } from "@/lib/auth";
@@ -35,6 +36,7 @@ export default async function NotificationsPage() {
 
   return (
     <main className="bg-surface font-poppins flex flex-1 flex-col">
+      {user ? <LiveNotifications userId={user.id} /> : null}
       <header className="sticky top-0 z-30 h-[70px] w-full bg-[rgba(22,22,22,0.75)] backdrop-blur-[25px]">
         <div className="mx-auto flex h-full w-full max-w-[599px] items-center gap-[16px] px-[25px]">
           <Link
@@ -77,7 +79,8 @@ export default async function NotificationsPage() {
             ) : null}
             <ul className="flex flex-col gap-[8px]">
               {items.map((item) => (
-                <li key={item.id}>
+                // keyed on the read state too, so a live refresh resets the optimistic row
+                <li key={`${item.id}:${item.unread}`}>
                   <NotificationItem notification={item} />
                 </li>
               ))}

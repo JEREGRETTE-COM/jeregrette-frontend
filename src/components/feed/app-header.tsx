@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Suspense } from "react";
 
+import { LiveNotifications } from "@/components/notifications/live-notifications";
 import { getAccessToken, getCurrentAuthor } from "@/lib/auth";
 import { loadUnreadCount } from "@/lib/notifications";
 
@@ -64,6 +65,7 @@ async function HeaderSession() {
     // Figma 248:962 — two round buttons replace the menu: notifications, profile.
     return (
       <div className="flex shrink-0 items-center gap-[10px]">
+        <LiveNotifications userId={author.id} />
         <Link
           href="/notifications"
           aria-label={

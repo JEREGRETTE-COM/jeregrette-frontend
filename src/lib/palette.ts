@@ -11,6 +11,21 @@ export const palette = [
   "#774b79", "#5491be", "#0a263d", "#6a0012", "#471717", "#2c3d0a",
 ] as const;
 
+/** One of the 30 colours above, as the API stores them (lowercase hex). */
+export function isKnownColor(value: unknown): value is (typeof palette)[number] {
+  return typeof value === "string" && (palette as readonly string[]).includes(value.toLowerCase());
+}
+
+/**
+ * The colour chosen at publication. Older posts, or an API that does not send
+ * it yet, fall back to the id: the same formula the backend backfilled with.
+ */
+export function colorOf(post: { id: string; background_color?: string | null }) {
+  return isKnownColor(post.background_color)
+    ? post.background_color.toLowerCase()
+    : backgroundFor(post.id);
+}
+
 /** Stable per post: nothing to store, and the colour never changes under a reader. */
 export function backgroundFor(id: string) {
   const sum = [...id].reduce((total, char) => total + char.charCodeAt(0), 0);

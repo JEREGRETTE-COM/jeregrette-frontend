@@ -18,6 +18,7 @@ import {
   deletePost,
   getReactionBreakdown,
   MAX_CONTENT,
+  regretBodyFrom,
   removeReaction,
   repost,
   setReaction,
@@ -156,18 +157,14 @@ export async function publishRegretAction(
     return { error: "Impossible d’ouvrir une session anonyme. Crée un compte pour publier." };
   }
 
-  const text = String(formData.get("regret") ?? "").trim();
-  if (!text) return { error: "Écris ton regret avant de publier." };
-  if (text.length > MAX_CONTENT) {
+  const body = regretBodyFrom(formData);
+  if (!body.content) return { error: "Écris ton regret avant de publier." };
+  if (body.content.length > MAX_CONTENT) {
     return { error: `Ton regret dépasse ${MAX_CONTENT} caractères.` };
   }
 
-  // The toggle of Figma 20:372; the post carries the choice from the start.
-  const allowRepost = formData.get("allow_repost") !== "0";
-
   try {
-    // The chosen colour is dropped: the post payload has no field for it yet.
-    await createPost({ content: text, allow_repost: allowRepost }, token);
+    await createPost(body, token);
   } catch (error) {
     if (error instanceof ApiError) return { error: error.displayMessage };
     throw error;

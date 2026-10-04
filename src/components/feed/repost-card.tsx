@@ -1,5 +1,6 @@
 import { AuthorRow } from "@/components/feed/author-row";
 import { CardActions } from "@/components/feed/card-actions";
+import { MentionText } from "@/components/feed/mention-text";
 import { PostMenu } from "@/components/feed/post-menu";
 import { RegretSurface } from "@/components/feed/regret-surface";
 import type { Repost } from "@/types";
@@ -40,7 +41,7 @@ export function RepostCard({
       <div className="flex flex-col px-[17px] pb-[58px] pt-[66px]">
         {repost.comment ? (
           <p className="mb-[9px] text-[14px] leading-[1.35] text-white sm:text-[15px]">
-            {repost.comment}
+            <MentionText text={repost.comment} mentions={repost.mentions} />
           </p>
         ) : null}
         <RegretSurface

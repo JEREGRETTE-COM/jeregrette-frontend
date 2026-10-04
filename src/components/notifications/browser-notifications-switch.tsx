@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-const PREFERENCE_KEY = "jr_notifications";
+export const PREFERENCE_KEY = "jr_notifications";
 
 type NotificationState = "unsupported" | "default" | "granted" | "denied";
 
@@ -11,7 +11,7 @@ function readPermission(): NotificationState {
   return Notification.permission;
 }
 
-function readPreference() {
+export function readPreference() {
   try {
     return window.localStorage.getItem(PREFERENCE_KEY) !== "off";
   } catch {

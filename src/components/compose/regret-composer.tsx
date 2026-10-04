@@ -3,9 +3,11 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useActionState, useRef, useState } from "react";
+import { useActionState, useState } from "react";
 
 import { publishRegretAction, type FormState } from "@/app/actions";
+import { MENTION_LIST_ID, MentionSuggestions } from "@/components/compose/mention-suggestions";
+import { useMentionAutocomplete } from "@/components/compose/use-mention-autocomplete";
 import { Button } from "@/components/ui/button";
 import { palette } from "@/lib/palette";
 
@@ -19,7 +21,9 @@ export function RegretComposer({ inDialog = false }: { inDialog?: boolean }) {
   const [colour, setColour] = useState(0);
   // Figma 20:372 — the round button in the top bar, struck through once off.
   const [allowRepost, setAllowRepost] = useState(true);
-  const textarea = useRef<HTMLTextAreaElement>(null);
+
+  const { textarea, suggestions, active, update, onKeyDown, select, close } =
+    useMentionAutocomplete(() => autoGrow());
 
   // The message is vertically centred, so the field grows with its content.
   function autoGrow() {
@@ -101,12 +105,28 @@ export function RegretComposer({ inDialog = false }: { inDialog?: boolean }) {
           rows={1}
           required
           maxLength={500}
-          onInput={autoGrow}
+          onInput={() => {
+            autoGrow();
+            update();
+          }}
+          onClick={update}
+          onKeyDown={onKeyDown}
+          onBlur={close}
+          aria-autocomplete="list"
+          aria-controls={MENTION_LIST_ID}
           placeholder="Qu’est ce que tu regrettes"
           aria-label="Qu’est ce que tu regrettes"
           className="max-h-full w-[331px] max-w-full resize-none overflow-y-auto bg-transparent text-center text-[24px] font-medium text-white outline-none placeholder:text-white/35"
         />
       </div>
+
+      {/* over the message, just above the send button */}
+      <MentionSuggestions
+        suggestions={suggestions}
+        active={active}
+        onSelect={select}
+        className="absolute inset-x-6 bottom-[100px]"
+      />
 
       {state.error ? (
         <p className="shrink-0 px-6 pb-[10px] text-center text-[14px] text-white">

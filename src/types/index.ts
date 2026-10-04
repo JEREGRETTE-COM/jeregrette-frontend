@@ -3,6 +3,8 @@ export type NavItem = {
   href: string;
 };
 
+import type { Mention } from "@/lib/mentions";
+import type { Watermark } from "@/lib/patterns";
 import type { ReactionType } from "@/types/api";
 
 /** The backend vocabulary is the vocabulary. */
@@ -29,6 +31,9 @@ export type Regret = {
   text: string;
   /** Solid colour painted under the card's dark top-down overlay. */
   background: string;
+  /** Tile repeated over the card. */
+  watermark: Watermark;
+  mentions: Mention[];
   counts: Record<ReactionId, number>;
   /** false while the per-reaction counts have not been fetched yet. */
   countsKnown: boolean;
@@ -44,6 +49,8 @@ export type Repost = {
   allowOpinionOnRepost: boolean;
   time: string;
   comment: string;
+  /** Resolved from the comment, not from the quoted regret. */
+  mentions: Mention[];
   counts: Record<ReactionId, number>;
   /** false while the per-reaction counts have not been fetched yet. */
   countsKnown: boolean;

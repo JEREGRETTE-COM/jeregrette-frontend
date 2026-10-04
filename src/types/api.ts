@@ -1,3 +1,5 @@
+import type { Watermark } from "@/lib/patterns";
+
 /** Shapes returned by the Laravel backend. */
 
 /** "EMAIL" is confirmed; the OAuth buttons imply others, hence the fallback. */
@@ -76,6 +78,8 @@ export type ApiRubrique = {
  * The backend serialises an absent `original_post` as `{}`, hence the loose type;
  * use `quotedPost()` rather than reading it directly.
  */
+export type ApiMention = { id: string; username: string };
+
 export type ApiPost = {
   id: string;
   type: PostType;
@@ -98,6 +102,11 @@ export type ApiPost = {
   created_at: string;
   updated_at: string;
   original_post?: ApiPost | Record<string, never> | null;
+  /** Users the API resolved from the @words of `content`. */
+  mentions?: ApiMention[];
+  /** Optional until every backend sends them; see colorOf / watermarkOf. */
+  background_color?: string | null;
+  watermark?: Watermark | null;
 };
 
 /** GET /posts has no cursor: `has_more` false only when the base is nearly empty. */
@@ -145,14 +154,14 @@ export type ReactionSummary = {
 };
 
 /**
- * GET /notifications item. `data` is a string on the wire, most likely a
- * JSON-encoded payload. `read_at` is documented as a plain string, but an
- * unread notification can only carry null there.
+ * GET /notifications item. `data` is the payload (kind, message, actor_*,
+ * post_id, repost_id), sent either as an object or JSON-encoded. `read_at` is
+ * documented as a plain string, but an unread notification carries null.
  */
 export type ApiNotification = {
   id: string;
   type: string | null;
-  data: string;
+  data: Record<string, unknown> | string;
   read_at: string | null;
   created_at: string;
 };
