@@ -53,3 +53,4 @@ CLAUDE.md
 /playwright/.cache/
 /e2e/
 /playwright.config.ts
+/unit
