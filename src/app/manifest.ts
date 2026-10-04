@@ -1,10 +1,11 @@
+import { siteConfig } from '@/lib/config';
 import type { MetadataRoute } from 'next';
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'Jeregrette',
-    short_name: 'Jeregrette',
-    description: 'Jeregrette PWA',
+    name: siteConfig.name,
+    short_name: siteConfig.short_name,
+    description: siteConfig.pwa_description,
     start_url: '/',
     display: 'standalone',
     background_color: '#ffffff',

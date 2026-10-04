@@ -23,5 +23,5 @@ jobs:
           push: true
           tags: |
             benrango/jeregrette:${{github.sha}}
-            benrango/jeregrette:1.1.1
+            benrango/jeregrette:1.1.2
             benrango/jeregrette:latest
