@@ -42,3 +42,44 @@ export async function toSquareAvatar(file: File): Promise<File> {
   const type = blob.type || "image/jpeg";
   return new File([blob], `avatar.${type === "image/webp" ? "webp" : "jpg"}`, { type });
 }
+
+/** The square the reader framed, in the source image's own pixels. */
+export type Crop = { x: number; y: number; size: number };
+
+/**
+ * Renders the chosen square at AVATAR_SIZE. Same output as toSquareAvatar, but
+ * the frame comes from the reader instead of the centre of the photo.
+ */
+export async function cropToAvatar(bitmap: ImageBitmap, crop: Crop): Promise<File> {
+  const canvas = document.createElement("canvas");
+  canvas.width = AVATAR_SIZE;
+  canvas.height = AVATAR_SIZE;
+  const context = canvas.getContext("2d");
+  if (!context) throw new Error("Canvas indisponible");
+
+  context.drawImage(
+    bitmap,
+    crop.x,
+    crop.y,
+    crop.size,
+    crop.size,
+    0,
+    0,
+    AVATAR_SIZE,
+    AVATAR_SIZE,
+  );
+
+  return encodeCanvas(canvas);
+}
+
+/** webp when the browser can, jpeg otherwise — Safari only gained webp recently. */
+async function encodeCanvas(canvas: HTMLCanvasElement): Promise<File> {
+  const encode = (type: string) =>
+    new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, type, QUALITY));
+
+  const blob = (await encode("image/webp")) ?? (await encode("image/jpeg"));
+  if (!blob) throw new Error("Conversion impossible");
+
+  const type = blob.type || "image/jpeg";
+  return new File([blob], `avatar.${type === "image/webp" ? "webp" : "jpg"}`, { type });
+}

@@ -5,8 +5,8 @@ import { useEffect, useRef, useState, useTransition } from "react";
 import { createPortal } from "react-dom";
 
 import { updateProfileAction, uploadAvatarAction } from "@/app/actions";
+import { PhotoCropper } from "@/components/profile/photo-cropper";
 import { Dialog } from "@/components/ui/dialog";
-import { toSquareAvatar } from "@/lib/image";
 import { initial, isHttpsUrl } from "@/lib/utils";
 
 /** Backend rules on PATCH /users/me. */
@@ -36,8 +36,9 @@ export function EditProfileButton({
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState(profile);
   const [file, setFile] = useState<File | null>(null);
+  // The picked photo waits here while the reader frames it.
+  const [toCrop, setToCrop] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
-  const [preparing, setPreparing] = useState(false);
   const [brokenPhoto, setBrokenPhoto] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
@@ -78,17 +79,14 @@ export function EditProfileButton({
     }
 
     setError(null);
-    setPreparing(true);
-    try {
-      const square = await toSquareAvatar(picked);
-      setFile(square);
-      setPreview(URL.createObjectURL(square));
-      setBrokenPhoto(false);
-    } catch {
-      setError("Impossible de lire cette image.");
-    } finally {
-      setPreparing(false);
-    }
+    setToCrop(picked);
+  }
+
+  function cropped(square: File) {
+    setToCrop(null);
+    setFile(square);
+    setPreview(URL.createObjectURL(square));
+    setBrokenPhoto(false);
   }
 
   function removePhoto() {
@@ -168,6 +166,12 @@ export function EditProfileButton({
       {open
         ? createPortal(
             <Dialog label="Modifier le profil" onClose={() => setOpen(false)}>
+              {toCrop ? (
+                <div className="bg-surface flex w-full flex-col items-center rounded-[25px] border-[0.5px] border-white/10 p-[22px]">
+                  <p className="mb-[16px] text-[18px] font-semibold text-white">Recadrer la photo</p>
+                  <PhotoCropper file={toCrop} onCancel={() => setToCrop(null)} onDone={cropped} />
+                </div>
+              ) : (
               <form
                 action={save}
                 className="bg-surface flex max-h-[calc(100dvh-40px)] w-full flex-col overflow-y-auto rounded-[25px] border-[0.5px] border-white/10 p-[22px]"
@@ -208,10 +212,9 @@ export function EditProfileButton({
                       <button
                         type="button"
                         onClick={() => picker.current?.click()}
-                        disabled={preparing}
                         className="h-[42px] rounded-[15px] bg-white px-[16px] text-[14px] font-semibold text-black transition-opacity hover:opacity-90 disabled:opacity-40"
                       >
-                        {preparing ? "Préparation…" : "Choisir une photo"}
+                        Choisir une photo
                       </button>
                       {shownPhoto ? (
                         <button
@@ -291,13 +294,14 @@ export function EditProfileButton({
                   </button>
                   <button
                     type="submit"
-                    disabled={pending || preparing || !changed}
+                    disabled={pending || !changed}
                     className="h-[46px] flex-1 rounded-[23px] bg-white text-[15px] font-semibold text-black transition-opacity hover:opacity-90 disabled:opacity-40"
                   >
                     {pending ? "Envoi…" : "Enregistrer"}
                   </button>
                 </div>
               </form>
+              )}
             </Dialog>,
             document.body,
           )

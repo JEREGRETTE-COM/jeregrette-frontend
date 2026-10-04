@@ -54,6 +54,7 @@ export default async function UserProfilePage({
       viewerId={viewer.id}
       own={false}
       loaded={{ count: theirPosts.posts.length, hasMore: theirPosts.hasMore }}
+      more={{ target: id, cursor: theirPosts.nextCursor, hasMore: theirPosts.hasMore }}
     />
   );
 }

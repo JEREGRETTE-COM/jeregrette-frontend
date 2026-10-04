@@ -3,7 +3,9 @@ import Link from "next/link";
 
 import { signOutAction } from "@/app/actions";
 import { RegretCard } from "@/components/feed/regret-card";
+import { AvatarZoom } from "@/components/profile/avatar-zoom";
 import { EditProfileButton } from "@/components/profile/edit-profile-button";
+import { ProfileLoadMore } from "@/components/profile/profile-load-more";
 import { RepostCard } from "@/components/feed/repost-card";
 import { handleOf, initial, safeAvatar } from "@/lib/utils";
 import type { ApiAuthUser } from "@/types/api";
@@ -20,6 +22,7 @@ export function ProfileView({
   viewerId,
   own,
   loaded,
+  more,
 }: {
   user: ApiAuthUser;
   items: FeedItem[];
@@ -27,6 +30,8 @@ export function ProfileView({
   own: boolean;
   /** What the posts list returned, used when the API omits `posts_count`. */
   loaded?: { count: number; hasMore: boolean };
+  /** "me" or the user id, plus the cursor, so older regrets stay reachable. */
+  more?: { target: string; cursor: string | null; hasMore: boolean };
 }) {
   const handle = handleOf(user.username);
   // The API does not serialise posts_count today, so the loaded page stands in:
@@ -64,7 +69,15 @@ export function ProfileView({
                 title="Se déconnecter"
                 className="flex size-[35px] items-center justify-center transition-opacity hover:opacity-80"
               >
-                <Image src="/icons/logout.svg" alt="" width={20} height={20} unoptimized />
+                <Image
+                  src="/icons/logout.svg"
+                  alt=""
+                  width={17}
+                  height={14}
+                  unoptimized
+                  // same height as the pencil next to it (Figma 167:994)
+                  className="h-[13.9333px] w-[16.4px]"
+                />
               </button>
             </form>
           </div>
@@ -74,14 +87,7 @@ export function ProfileView({
 
       <div className="mx-auto flex w-full max-w-[599px] flex-col px-[25px] pb-[140px]">
         {avatar ? (
-          <Image
-            src={avatar}
-            alt=""
-            width={75}
-            height={75}
-            unoptimized
-            className="mx-auto h-[75px] w-[75px] rounded-full object-cover"
-          />
+          <AvatarZoom src={avatar} handle={handle} />
         ) : (
           <span
             aria-hidden
@@ -145,6 +151,15 @@ export function ProfileView({
                 <RepostCard key={item.repost.id} repost={item.repost} currentUserId={viewerId} />
               ),
             )}
+
+            {more ? (
+              <ProfileLoadMore
+                target={more.target}
+                initialCursor={more.cursor}
+                initialHasMore={more.hasMore}
+                viewerId={viewerId}
+              />
+            ) : null}
           </div>
         )}
       </div>
