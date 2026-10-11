@@ -2,10 +2,16 @@ import type { NextConfig } from "next";
 import withPWAInit from '@ducanh2912/next-pwa';
 const isCapacitorBuild = process.env.CAPACITOR_BUILD === 'true';
 const withPWA = withPWAInit({
-  dest: 'public',
-  disable: process.env.NODE_ENV === 'development',
-  register: true,
-  //skipWaiting: true,
+  dest: "public",
+  cacheStartUrl: true,
+  dynamicStartUrl: true,
+  reloadOnOnline: true,
+  
+  workboxOptions: {
+    skipWaiting: true,          
+    clientsClaim: true,         
+    cleanupOutdatedCaches: true,
+  },
 });
 
 const nextConfig: NextConfig = {
@@ -13,6 +19,19 @@ const nextConfig: NextConfig = {
   devIndicators: false,
   turbopack: {
 
+  },
+  async headers() {
+    return [
+      {
+        source: "/sw.js",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "no-store, no-cache, must-revalidate, proxy-revalidate",
+          },
+        ],
+      },
+    ];
   },
 
   // The share-image route reads these from disk; without this they are not
